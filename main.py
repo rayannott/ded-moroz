@@ -1,15 +1,15 @@
 from dependency_injector.wiring import Provide, inject
 
 from src.dependencies import ApplicationContainer
-from src.services.bot import BotService
+from src.applications.bot.app import BotApp
 
 
 @inject
 def main(
-    bot_service: BotService = Provide[ApplicationContainer.bot_service],
+    bot_app: BotApp = Provide[ApplicationContainer.bot_app],
 ) -> None:
     """Main entry point for the TSO Adapter application."""
-    bot_service.run()
+    bot_app.run()
 
 
 if __name__ == "__main__":

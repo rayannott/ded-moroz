@@ -1,11 +1,14 @@
 from typing import cast
 
+import dotenv
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Configuration, Singleton
 
-from src.shared.bot import create_bot
-from src.services.bot import BotService
+from src.applications.bot.app import BotApp
+from src.services.moroz import DedMoroz
 from src.settings import Settings
+
+dotenv.load_dotenv()
 
 
 class ApplicationContainer(DeclarativeContainer):
@@ -13,6 +16,6 @@ class ApplicationContainer(DeclarativeContainer):
     config.from_pydantic(Settings())  # type: ignore
     config = cast(Settings, config)
 
-    bot = Singleton(create_bot, api_token=config.bot_token)
+    ded_moroz = Singleton(DedMoroz)
 
-    bot_service = Singleton(BotService, bot=bot)
+    bot_app = Singleton(BotApp, api_token=config.bot_token, ded_moroz=ded_moroz)

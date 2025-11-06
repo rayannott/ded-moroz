@@ -100,6 +100,7 @@ dependencies = [
     { name = "pydantic-extra-types" },
     { name = "pydantic-settings" },
     { name = "pytelegrambotapi" },
+    { name = "python-dotenv" },
 ]
 
 [package.dev-dependencies]
@@ -117,6 +118,7 @@ requires-dist = [
     { name = "pydantic-extra-types", specifier = ">=2.10.6" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },
     { name = "pytelegrambotapi", specifier = ">=4.29.1" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
 ]
 
 [package.metadata.requires-dev]
