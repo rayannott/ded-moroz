@@ -17,6 +17,7 @@ class CallbacksManager:
         self.ded_moroz = ded_moroz
 
     def register_callbacks(self, bot: telebot.TeleBot):
+        # TODO maybe make callbacks just functions?
         @bot.message_handler(commands=["start"])
         def start_handler(message: types.Message):
             StartCallback(self.bot, self.ded_moroz).process(message)

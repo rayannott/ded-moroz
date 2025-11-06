@@ -14,6 +14,5 @@ def main(
 
 if __name__ == "__main__":
     container = ApplicationContainer()
-    container.init_resources()
     container.wire(modules=[__name__])
     main()
