@@ -6,12 +6,12 @@ from src.applications.bot.callbacks_manager import CallbacksManager
 
 
 class BotApp:
-    def __init__(self, api_token: str, ded_moroz: DedMoroz):
+    def __init__(self, api_token: str, moroz: DedMoroz):
         self.api_token = api_token
-        self.ded_moroz = ded_moroz
+        self.moroz = moroz
 
         self.bot = self.create_bot()
-        self.callbacks_manager = CallbacksManager(self.bot, self.ded_moroz)
+        self.callbacks_manager = CallbacksManager(self.bot, self.moroz)
         self.callbacks_manager.register_callbacks(self.bot)
 
     def create_bot(self) -> telebot.TeleBot:

@@ -6,6 +6,7 @@ class User(BaseModel):
     id: int
     username: str | None = None
     name: str | None = None
+    target_user_id: int | None = None
 
     def __str__(self) -> str:
         return f"User(id={self.id}; @{self.username}, {self.name})"

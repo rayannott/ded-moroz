@@ -7,9 +7,9 @@ from src.services.moroz import DedMoroz
 
 
 class Callback(ABC):
-    def __init__(self, bot: telebot.TeleBot, ded_moroz: DedMoroz):
+    def __init__(self, bot: telebot.TeleBot, moroz: DedMoroz):
         self.bot = bot
-        self.ded_moroz = ded_moroz
+        self.moroz = moroz
 
     @abstractmethod
     def process(self, message: types.Message): ...
