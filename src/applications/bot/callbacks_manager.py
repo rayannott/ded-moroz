@@ -2,6 +2,7 @@ import telebot
 from loguru import logger
 from telebot import types
 
+from applications.bot.callbacks.delete import DeleteCallback
 from src.applications.bot.callbacks.create import CreateCallback
 from src.applications.bot.callbacks.echo import EchoCallback
 from src.applications.bot.callbacks.help import HelpCallback
@@ -51,6 +52,10 @@ class CallbacksManager:
         @bot.message_handler(commands=["create"])
         def create_handler(message: types.Message):
             CreateCallback(self.bot, self.moroz).process(message)
+
+        @bot.message_handler(commands=["delete"])
+        def delete_handler(message: types.Message):
+            DeleteCallback(self.bot, self.moroz).process(message)
 
         @bot.message_handler(commands=["name"])
         def name_handler(message: types.Message):

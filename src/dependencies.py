@@ -19,6 +19,10 @@ class ApplicationContainer(DeclarativeContainer):
 
     database_repository = Singleton(DatabaseRepository, db_connection=None)
 
-    moroz = Singleton(DedMoroz, database_repository=database_repository)
+    moroz = Singleton(
+        DedMoroz,
+        database_repository=database_repository,
+        settings=config,
+    )
 
     bot_app = Singleton(BotApp, api_token=config.bot_token, moroz=moroz)
