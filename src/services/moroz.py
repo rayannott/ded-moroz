@@ -52,7 +52,21 @@ class Moroz:
         logger.info(f"Room created: {room}")
         return room
 
-    def join_room(self, user_id: int, room_id: int):
+    def delete_room(self, user: User, room_id: str):
+        """Delete the given room if the user is its manager.
+
+        Raises
+            UserNotFound if the acting user does not exist (critical)
+            RoomNotFound if the room does not exist
+        """
+        logger.info(f"Deleting room id={room_id} by its manager")
+        user_actual = self.database_repository.get_user(user.id)
+        self.database_repository.delete_room(
+            room_id=room_id,
+        )
+        logger.info(f"Room deleted: {room_id} by user {user_actual}")
+
+    def join_room(self, user_id: int, room_id: str):
         """Join the user to the given room.
 
         Raises
@@ -64,6 +78,10 @@ class Moroz:
             user_id=user_id,
             room_id=room_id,
         )
+
+    def get_rooms_managed_by_user(self, user: User) -> list[Room]:
+        logger.info(f"Getting rooms managed by user: {user}")
+        return self.database_repository.get_rooms_managed_by_user(user.id)
 
     def create_user(self, user: User):
         logger.info(f"Creating user: {user}")
@@ -77,10 +95,10 @@ class Moroz:
         logger.info(f"Getting user: {user}")
         return self.database_repository.get_user(user.id)
 
-    def leave_room(self, user: User) -> bool:
+    def leave_room(self, user: User):
         logger.info(f"User {user} leaving room id={user}")
-        return True
+        self.database_repository.leave_room(user.id)
 
-    def set_user_name(self, user: User, name: str) -> bool:
+    def set_user_name(self, user: User, name: str):
         logger.info(f"Setting user {user} name to {name}")
-        return True
+        self.database_repository.set_user_name(user.id, name)

@@ -3,6 +3,7 @@ from typing import cast
 import dotenv
 from dependency_injector.containers import DeclarativeContainer
 from dependency_injector.providers import Configuration, Singleton
+from sqlalchemy import create_engine
 
 from src.applications.bot.app import BotApp
 from src.repositories.database import DatabaseRepository
@@ -17,7 +18,9 @@ class ApplicationContainer(DeclarativeContainer):
     config.from_pydantic(Settings())  # type: ignore
     config = cast(Settings, config)
 
-    database_repository = Singleton(DatabaseRepository, db_connection=None)
+    db_engine = Singleton(create_engine, config.database_url)
+
+    database_repository = Singleton(DatabaseRepository, engine=db_engine)
 
     moroz = Singleton(
         Moroz,

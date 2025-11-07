@@ -46,7 +46,7 @@ class CreateCallback(Callback):
         self.bot.send_message(
             message.chat.id,
             rf"""Room created successfully\! 🎉
-This room ID: `{room.short_code}` \(share this with your friends\)\.
+This room ID: `{room.short_code:04d}` \(share this with your friends\)\.
 Note that you are not automatically joined to the room; please /join to enter\.""",
             parse_mode="MarkdownV2",
         )
