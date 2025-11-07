@@ -2,7 +2,7 @@ import telebot
 from loguru import logger
 from telebot import types
 
-from applications.bot.callbacks.delete import DeleteCallback
+from src.applications.bot.callbacks.delete import DeleteCallback
 from src.applications.bot.callbacks.create import CreateCallback
 from src.applications.bot.callbacks.echo import EchoCallback
 from src.applications.bot.callbacks.help import HelpCallback

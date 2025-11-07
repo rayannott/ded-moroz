@@ -1,6 +1,6 @@
 from loguru import logger
 
-from models.room import Room
+from src.models.room import Room
 from src.repositories.database import DatabaseRepository
 from src.settings import Settings
 from src.shared.exceptions import MaxNumberOfRoomsReached, AlreadyInRoom, UserNotFound
