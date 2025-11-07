@@ -19,11 +19,11 @@ class DeleteCallback(Callback):
         usr = User.from_message(message)
         logger.info(f"/delete from {usr}")
 
-        managed_rooms = self.moroz.get_rooms_managed_by_user(usr)
+        managed_rooms = self.moroz.get_active_rooms_managed_by_user(usr)
         if not managed_rooms:
             self.bot.send_message(
                 message.chat.id,
-                "You are not managing any rooms currently.",
+                "You are not managing any active rooms currently.",
             )
             return
 
@@ -34,7 +34,9 @@ class DeleteCallback(Callback):
         answer = self.bot.send_message(
             message.chat.id,
             "Please select a room to delete:",
-            reply_markup=get_keyboard([f"{room.short_code:04d}" for room in managed_rooms]),
+            reply_markup=get_keyboard(
+                [f"{room.short_code:04d}" for room in managed_rooms]
+            ),
         )
         self.bot.register_next_step_handler(
             answer,
@@ -79,3 +81,10 @@ class DeleteCallback(Callback):
             f"Room {room.short_code:04d} deleted successfully. 🎉",
             reply_markup=remove_keyboard(),
         )
+
+        self._cleanup_after_room_deletion(room.id)
+
+    def _cleanup_after_room_deletion(self, room_id: str):
+        # TODO unset room_id for all users who were in this room
+        # and notify them that the room was deleted
+        pass
