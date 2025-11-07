@@ -1,12 +1,12 @@
 import telebot
 from loguru import logger
 
-from src.services.moroz import DedMoroz
+from src.services.moroz import Moroz
 from src.applications.bot.callbacks_manager import CallbacksManager
 
 
 class BotApp:
-    def __init__(self, api_token: str, moroz: DedMoroz):
+    def __init__(self, api_token: str, moroz: Moroz):
         self.api_token = api_token
         self.moroz = moroz
 

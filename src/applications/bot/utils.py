@@ -12,3 +12,7 @@ def get_keyboard(buttons: list[str]) -> types.ReplyKeyboardMarkup:
 
 def remove_keyboard() -> types.ReplyKeyboardRemove:
     return types.ReplyKeyboardRemove()
+
+
+def text(message: types.Message) -> str:
+    return message.text if message.text else ""

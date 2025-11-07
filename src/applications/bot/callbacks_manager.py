@@ -11,14 +11,15 @@ from src.applications.bot.callbacks.leave import LeaveCallback
 from src.applications.bot.callbacks.me import MeCallback
 from src.applications.bot.callbacks.name import NameCallback
 from src.applications.bot.callbacks.play import PlayCallback
+from src.applications.bot.callbacks.kick import KickCallback
 from src.applications.bot.callbacks.start import StartCallback
-from src.services.moroz import DedMoroz
+from src.services.moroz import Moroz
 
 
 class CallbacksManager:
     """Manages bot callbacks."""
 
-    def __init__(self, bot: telebot.TeleBot, moroz: DedMoroz):
+    def __init__(self, bot: telebot.TeleBot, moroz: Moroz):
         logger.debug("Initializing CallbacksManager")
         self.bot = bot
         self.moroz = moroz
@@ -48,6 +49,10 @@ class CallbacksManager:
         @bot.message_handler(commands=["play"])
         def play_handler(message: types.Message):
             PlayCallback(self.bot, self.moroz).process(message)
+
+        @bot.message_handler(commands=["kick"])
+        def kick_handler(message: types.Message):
+            KickCallback(self.bot, self.moroz).process(message)
 
         @bot.message_handler(commands=["create"])
         def create_handler(message: types.Message):

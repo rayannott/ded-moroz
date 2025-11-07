@@ -1,13 +1,11 @@
 from loguru import logger
 from telebot import types
-from src.applications.bot.callbacks._base import Callback
-from src.models.user import User
 from telebot.formatting import escape_markdown
-from src.applications.bot.utils import get_keyboard, remove_keyboard
 
-
-def text(message: types.Message) -> str:
-    return message.text if message.text else ""
+from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.utils import text
+from src.models.user import User
+from src.shared.exceptions import MaxNumberOfRoomsReached, UserNotFound
 
 
 class CreateCallback(Callback):
@@ -20,19 +18,35 @@ class CreateCallback(Callback):
     """
 
     def process(self, message: types.Message):
-        logger.info(f"/create from {User.from_message(message)}")
-        kb = get_keyboard(["one", "two"])
-        msg = self.bot.send_message(message.chat.id, "Room creation.", reply_markup=kb)
-        self.bot.register_next_step_handler(msg, self._next_step)
+        usr = User.from_message(message)
+        logger.info(f"/create from {usr}")
 
-    def _next_step(self, message: types.Message):
-        option = text(message)
-        # msg = rf"{option!r} room creation selected\. Code: {mcode('1234')}"
-        code = "1234"
-        msg = escape_markdown(f"Room creation selected: {option!r}. Code: `{code}`")
+        try:
+            this_user = self.moroz.get_user(usr)
+        except UserNotFound:
+            self.bot.send_message(
+                message.chat.id,
+                "You are not registered yet. Please /start to register.",
+            )
+            return
+
+        try:
+            room = self.moroz.create_room(
+                created_by_user_id=this_user.id,
+                room_name="New Room",
+            )
+        except MaxNumberOfRoomsReached:
+            self.bot.send_message(
+                message.chat.id,
+                "You have reached the maximum number of rooms you can create. "
+                "Please /delete an existing room before creating a new one.",
+            )
+            return
+
         self.bot.send_message(
             message.chat.id,
-            msg,
+            rf"""Room created successfully\! 🎉
+This room ID: `{room.short_code}` \(share this with your friends\)\.
+Note that you are not automatically joined to the room; please /join to enter\.""",
             parse_mode="MarkdownV2",
-            reply_markup=remove_keyboard(),
         )
