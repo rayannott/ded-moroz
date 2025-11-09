@@ -1,0 +1,149 @@
+from loguru import logger
+from telebot import types
+
+from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.callbacks.management.delete import delete
+from src.applications.bot.callbacks.management.kick import kick
+from src.applications.bot.callbacks.management.play import play
+from src.applications.bot.utils import get_keyboard, remove_keyboard, text
+from src.models.room import Room
+from src.models.user import User
+from src.shared.exceptions import UserNotFound
+
+_CANCEL_ACTION = "Cancel"
+_DELETE_ACTION = "delete room"
+_KICK_PLAYER_ACTION = "kick player"
+_START_GAME_ACTION = "start game"
+
+
+class ManageCallback(Callback):
+    def process(self, message: types.Message):
+        usr = User.from_message(message)
+        logger.info(f"/manage from {usr}")
+
+        try:
+            managed_rooms = self.moroz.get_active_rooms_managed_by_user(usr)
+        except UserNotFound:
+            self.bot.send_message(
+                message.chat.id,
+                "You are not registered yet. Please /start to register.",
+            )
+            return
+
+        if not managed_rooms:
+            self.bot.send_message(
+                message.chat.id,
+                "You are not managing any active rooms currently.",
+            )
+            return
+
+        code_to_room = {room.short_code: room for room in managed_rooms}
+
+        answer = self.bot.send_message(
+            message.chat.id,
+            "Please select a room to manage:",
+            reply_markup=get_keyboard(
+                [f"{room.short_code:04d}" for room in managed_rooms] + [_CANCEL_ACTION]
+            ),
+        )
+        self.bot.register_next_step_handler(
+            answer,
+            self._handle_room_chosen,
+            user=usr,
+            code_to_room=code_to_room,
+        )
+
+    def _handle_room_chosen(
+        self,
+        message: types.Message,
+        user: User,
+        code_to_room: dict[int, Room],
+    ):
+        chosen_text = text(message)
+        if chosen_text == _CANCEL_ACTION:
+            self.bot.send_message(
+                message.chat.id,
+                "Room management cancelled.",
+                reply_markup=remove_keyboard(),
+            )
+            logger.info(f"Room management cancelled by {user}")
+            return
+        room_short_code = int(chosen_text)
+        logger.info(f"Room to manage chosen: {room_short_code} by {user}")
+
+        room = code_to_room.get(room_short_code)
+        if room is None:
+            logger.critical(f"Room {room_short_code=} not found; {user=}")
+            self.bot.send_message(
+                message.chat.id, "Internal error.", reply_markup=remove_keyboard()
+            )
+            return
+
+        actions_kb = get_keyboard(
+            [_DELETE_ACTION, _KICK_PLAYER_ACTION, _START_GAME_ACTION, _CANCEL_ACTION]
+        )
+
+        answer = self.bot.send_message(
+            message.chat.id,
+            f"You are managing room {room.short_code:04d}. Please choose an action:",
+            reply_markup=actions_kb,
+        )
+
+        self.bot.register_next_step_handler(
+            answer,
+            self._handle_action_chosen,
+            user=user,
+            room=room,
+        )
+
+    def _handle_action_chosen(
+        self,
+        message: types.Message,
+        user: User,
+        room: Room,
+    ):
+        chosen_text = text(message)
+        if chosen_text == _CANCEL_ACTION:
+            self.bot.send_message(
+                message.chat.id,
+                "Room management cancelled.",
+                reply_markup=remove_keyboard(),
+            )
+            logger.info(f"Room management cancelled by {user}")
+            return
+
+        logger.info(
+            f"Action chosen for room {room.short_code:04d} by {user}: {chosen_text}"
+        )
+
+        if chosen_text == _DELETE_ACTION:
+            delete(
+                bot=self.bot,
+                moroz=self.moroz,
+                message=message,
+                room=room,
+                user=user,
+            )
+        elif chosen_text == _KICK_PLAYER_ACTION:
+            kick(
+                bot=self.bot,
+                moroz=self.moroz,
+                message=message,
+                room=room,
+                user=user,
+            )
+        elif chosen_text == _START_GAME_ACTION:
+            play(
+                bot=self.bot,
+                moroz=self.moroz,
+                message=message,
+                room=room,
+                user=user,
+            )
+        else:
+            logger.info(f"Unknown action chosen: {chosen_text} by {user}")
+            self.bot.send_message(
+                message.chat.id,
+                "Unknown action selected.",
+                reply_markup=remove_keyboard(),
+            )
