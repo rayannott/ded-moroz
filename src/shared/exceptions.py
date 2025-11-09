@@ -28,6 +28,18 @@ class NotInRoom(AppError):
     pass
 
 
+class GameAlreadyStarted(AppError):
+    """Raised when trying to start a game that has already started."""
+
+    pass
+
+
+class GameAlreadyCompleted(AppError):
+    """Raised when trying to complete a game that has already been completed."""
+
+    pass
+
+
 class RoomNotFound(AppError):
     """Raised when a room is not found."""
 
