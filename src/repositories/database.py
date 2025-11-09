@@ -5,7 +5,6 @@ from sqlalchemy.orm import sessionmaker
 
 from src.models.room import Room
 from src.models.user import User
-from src.repositories.orm.converters import room, user
 from src.repositories.orm.models import Base, RoomORM, UserORM, TargetORM
 from src.shared.exceptions import (
     NotInRoom,
@@ -91,7 +90,7 @@ class DatabaseRepository:
             logger.warning(f"More than one room found with {short_code=}: {room_orms}")
             return max(room_orms, key=lambda r: r.created_dt)
         logger.debug(f"Get room by {short_code=}: {room_orms[0]}")
-        return room(room_orms[0])
+        return Room.model_validate(room_orms[0])
 
     def create_user(self, id: int, username: str | None, name: str | None) -> User:
         logger.debug(f"Creating user {id=}, {username=}, {name=}")
@@ -112,7 +111,7 @@ class DatabaseRepository:
         if room_orm is None:
             raise RoomNotFound(f"Room {room_id=} not found")
         logger.debug(f"Get room {room_orm}")
-        return room(room_orm)
+        return Room.model_validate(room_orm)
 
     def get_user(self, user_id: int) -> User:
         logger.debug(f"Getting user {user_id=}")
@@ -121,7 +120,7 @@ class DatabaseRepository:
             if user_orm is None:
                 raise UserNotFound(f"User {user_id=} not found")
             logger.debug(f"Get user {user_orm}")
-            return user(user_orm)
+            return User.model_validate(user_orm)
 
     def get_rooms_managed_by_user(self, user_id: int) -> list[Room]:
         logger.debug(f"Getting rooms managed by user {user_id=}")
@@ -133,7 +132,7 @@ class DatabaseRepository:
                 s.query(RoomORM).filter(RoomORM.manager_user_id == user_id).all()
             )
         logger.debug(f"Get rooms managed by user {user_id=}: {room_orms}")
-        return [room(room_orm) for room_orm in room_orms]
+        return [Room.model_validate(room_orm) for room_orm in room_orms]
 
     def get_active_rooms_managed_by_user(self, user_id: int) -> list[Room]:
         logger.debug(f"Getting active rooms managed by user {user_id=}")
@@ -151,7 +150,7 @@ class DatabaseRepository:
         with self.session() as s:
             user_orms = s.query(UserORM).filter(UserORM.room_id == room_id).all()
         logger.debug(f"Get users in room {room_id=}: {user_orms}")
-        return [user(user_orm) for user_orm in user_orms]
+        return [User.model_validate(user_orm) for user_orm in user_orms]
 
     def join_room(self, user_id: int, room_id: str):
         logger.debug(f"User {user_id=} joining {room_id=}")

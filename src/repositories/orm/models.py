@@ -19,6 +19,7 @@ class UserORM(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    joined_dt: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     username: Mapped[str | None] = mapped_column(nullable=True)
     name: Mapped[str | None] = mapped_column(nullable=True)
     room_id: Mapped[str | None] = mapped_column(ForeignKey("rooms.id"), nullable=True)

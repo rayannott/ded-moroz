@@ -1,8 +1,12 @@
-from pydantic import BaseModel
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic_extra_types.pendulum_dt import DateTime
 
 
 class Room(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     name: str
     manager_user_id: int
@@ -17,3 +21,12 @@ class Room(BaseModel):
     def short_code(self) -> int:
         """Return a short numeric code for the room for easier sharing."""
         return int(self.id, 16) % 10_000
+
+    @field_validator("created_dt", "started_at", "completed_dt", mode="before")
+    @classmethod
+    def convert_std_datetime_to_pendulum(cls, v):
+        if isinstance(v, datetime):
+            return DateTime.fromisoformat(v.isoformat())
+        if v is None:
+            return None
+        return v
