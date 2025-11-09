@@ -26,6 +26,7 @@ class ApplicationContainer(DeclarativeContainer):
         Moroz,
         database_repository=database_repository,
         max_rooms_managed_by_user=config.max_rooms_managed_by_user,
+        min_players_to_start_game=config.min_players_to_start_game,
     )
 
     bot_app = Singleton(BotApp, api_token=config.bot_token, moroz=moroz)
