@@ -1,4 +1,6 @@
 import random
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
@@ -92,7 +94,12 @@ class DatabaseRepository:
             if s.get(UserORM, id) is not None:
                 raise UserAlreadyExists(f"User {id=} already exists")
 
-            user_orm = UserORM(id=id, username=username, name=name)
+            user_orm = UserORM(
+                id=id,
+                username=username,
+                name=name,
+                joined_dt=datetime.now(tz=ZoneInfo("UTC")),
+            )
             s.add(user_orm)
             s.commit()
             logger.debug(f"Create user {user_orm}")

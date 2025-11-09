@@ -13,7 +13,7 @@ class NameCallback(Callback):
     overriding `message.chat.first_name`.
     """
 
-    def process(self, message: types.Message):
+    def process(self, message: types.Message, user: User):
         usr = User.from_message(message)
         logger.info(f"/name from {usr}")
 

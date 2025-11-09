@@ -2,7 +2,7 @@ from loguru import logger
 from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
-from src.shared.exceptions import UserNotFound, NotInRoom
+from src.shared.exceptions import NotInRoom
 
 from src.models.user import User
 
@@ -14,17 +14,10 @@ class LeaveCallback(Callback):
     notify that room's manager.
     """
 
-    def process(self, message: types.Message):
-        usr = User.from_message(message)
-        logger.info(f"/leave from {usr}")
+    def process(self, message: types.Message, user: User):
+        logger.info(f"/leave from {user}")
         try:
-            self.moroz.leave_room(usr)
-        except UserNotFound:
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register.",
-            )
-            return
+            self.moroz.leave_room(user)
         except NotInRoom:
             self.bot.send_message(
                 message.chat.id,

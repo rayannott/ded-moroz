@@ -8,7 +8,6 @@ from src.applications.bot.callbacks.management.play import PlayCallback
 from src.applications.bot.utils import get_keyboard, remove_keyboard, text
 from src.models.room import Room
 from src.models.user import User
-from src.shared.exceptions import UserNotFound
 
 _CANCEL_ACTION = "Cancel"
 _DELETE_ACTION = "delete room"
@@ -17,18 +16,10 @@ _START_GAME_ACTION = "start game"
 
 
 class ManageCallback(Callback):
-    def process(self, message: types.Message):
-        usr = User.from_message(message)
-        logger.info(f"/manage from {usr}")
+    def process(self, message: types.Message, user: User):
+        logger.info(f"/manage from {user}")
 
-        try:
-            managed_rooms = self.moroz.get_active_rooms_managed_by_user(usr)
-        except UserNotFound:
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register.",
-            )
-            return
+        managed_rooms = self.moroz.get_active_rooms_managed_by_user(user)
 
         if not managed_rooms:
             self.bot.send_message(
@@ -43,13 +34,14 @@ class ManageCallback(Callback):
             message.chat.id,
             "Please select a room to manage:",
             reply_markup=get_keyboard(
-                [f"{room.display_short_code}" for room in managed_rooms] + [_CANCEL_ACTION]
+                [f"{room.display_short_code}" for room in managed_rooms]
+                + [_CANCEL_ACTION]
             ),
         )
         self.bot.register_next_step_handler(
             answer,
             self._handle_room_chosen,
-            user=usr,
+            user=user,
             code_to_room=code_to_room,
         )
 

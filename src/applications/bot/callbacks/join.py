@@ -20,21 +20,9 @@ class JoinCallback(Callback):
     and ask to set /name if their name is potentially unclear
     """
 
-    def process(self, message: types.Message):
-        usr = User.from_message(message)
-        logger.info(f"/join from {usr}")
-
-        try:
-            user_actual = self.moroz.get_user(usr)
-        except UserNotFound:
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register.",
-            )
-            return
-
-        if user_actual.room_id is not None:
-            room = self.moroz.get_room(user_actual.room_id)
+    def process(self, message: types.Message, user: User):
+        if user.room_id is not None:
+            room = self.moroz.get_room(user.room_id)
             self.bot.send_message(
                 message.chat.id,
                 f"You have already joined some room {room.display_short_code}. Please /leave it first.",
@@ -48,7 +36,7 @@ class JoinCallback(Callback):
         self.bot.register_next_step_handler(
             answer,
             self._handle_room_code_entered,
-            user=usr,
+            user=user,
         )
 
     def _handle_room_code_entered(

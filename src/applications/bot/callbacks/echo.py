@@ -6,6 +6,6 @@ from src.models.user import User
 
 
 class EchoCallback(Callback):
-    def process(self, message: types.Message):
-        logger.info(f"/echo from {User.from_message(message)}")
-        self.bot.reply_to(message, f"Unknown command '{message.text}'. Try /help.")
+    def process(self, message: types.Message, user: User):
+        logger.info(f"/echo from {user}")
+        self.bot.reply_to(message, f"Unknown command {message.text!r}. Try /help.")

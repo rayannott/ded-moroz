@@ -3,7 +3,7 @@ from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
-from src.shared.exceptions import MaxNumberOfRoomsReached, UserNotFound
+from src.shared.exceptions import MaxNumberOfRoomsReached
 
 
 class CreateCallback(Callback):
@@ -15,18 +15,9 @@ class CreateCallback(Callback):
       hence, suggest to /join
     """
 
-    def process(self, message: types.Message):
-        usr = User.from_message(message)
-        logger.info(f"/create from {usr}")
-
-        try:
-            this_user = self.moroz.get_user(usr)
-        except UserNotFound:
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register.",
-            )
-            return
+    def process(self, message: types.Message, user: User):
+        logger.info(f"/create from {user}")
+        this_user = self.moroz.get_user(user)
 
         try:
             room = self.moroz.create_room(
