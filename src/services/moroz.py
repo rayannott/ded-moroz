@@ -2,14 +2,10 @@ from loguru import logger
 
 from src.models.room import Room
 from src.repositories.database import DatabaseRepository
-from src.settings import Settings
 from src.models.user import User
 from src.shared.exceptions import (
     MaxNumberOfRoomsReached,
     AlreadyInRoom,
-    UserNotFound,
-    NotInRoom,
-    RoomNotFound,
 )
 
 
@@ -53,23 +49,19 @@ class Moroz:
         logger.info(f"Room created {room}")
         return room
 
-    def delete_room(self, user: User, room_id: str):
+    def delete_room(self, room_id: str):
         """Delete the given room if the user is its manager.
 
         Raises
-            `UserNotFound` if the acting user does not exist (critical)
             `RoomNotFound` if the room does not exist
         """
         logger.info(f"Deleting room id={room_id} by its manager")
-        user_actual = self.database_repository.get_user(
-            user.id
-        )  # TODO do I need this check?
         self.database_repository.delete_room(
             room_id=room_id,
         )
-        logger.info(f"Room deleted: {room_id} by user {user_actual}")
+        logger.info(f"Room deleted: {room_id}")
 
-    def join_room_by_short_code(self, user: User, room_short_code: int):
+    def join_room_by_short_code(self, user: User, room_short_code: int) -> Room:
         """Join the user to the given room.
 
         Raises
@@ -88,6 +80,7 @@ class Moroz:
             user_id=user.id,
             room_id=room.id,
         )
+        return room
 
     def get_active_rooms_managed_by_user(self, user: User) -> list[Room]:
         logger.info(f"Getting active rooms managed by {user}")

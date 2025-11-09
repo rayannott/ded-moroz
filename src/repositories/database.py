@@ -44,7 +44,7 @@ class DatabaseRepository:
             s.add(room_orm)
             s.commit()
 
-        logger.debug(f"Add room {room_orm}")
+        logger.debug(f"Add room {room_orm!r}")
         return Room(
             id=room_id,
             name=room_name,
@@ -73,7 +73,7 @@ class DatabaseRepository:
             user_orm = UserORM(id=id, username=username, name=name)
             s.add(user_orm)
             s.commit()
-            logger.debug(f"Add user {user_orm}")
+            logger.debug(f"Create user {user_orm}")
             return User(id=id, username=username, name=name)
 
     def get_room(self, room_id: str) -> Room:

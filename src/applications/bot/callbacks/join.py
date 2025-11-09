@@ -3,6 +3,7 @@ from telebot import types
 
 from src.applications.bot.callbacks._base import Callback
 from src.models.user import User
+from src.models.room import Room
 from src.applications.bot.utils import text
 from src.shared.exceptions import (
     RoomNotFound,
@@ -54,11 +55,21 @@ class JoinCallback(Callback):
         message: types.Message,
         user: User,
     ):
-        room_short_code = int(text(message))
+        chosen_text = text(message)
+        try:
+            room_short_code = int(chosen_text)
+        except ValueError:
+            self.bot.send_message(
+                message.chat.id,
+                "Invalid room ID format. Please enter a numeric room ID.",
+            )
+            logger.info(f"Invalid room ID format entered by {user}: {chosen_text!r}")
+            return
+        
         logger.info(f"User {user} joining room with code {room_short_code}")
 
         try:
-            self.moroz.join_room_by_short_code(
+            joined_room = self.moroz.join_room_by_short_code(
                 user=user,
                 room_short_code=room_short_code,
             )
@@ -90,4 +101,13 @@ class JoinCallback(Callback):
         self.bot.send_message(
             message.chat.id,
             f"You have successfully joined the room {room_short_code:04d}! 🎉",
+        )
+
+        self._notify_manager(user, joined_room)
+
+    def _notify_manager(self, user: User, room: Room):
+        logger.info(f"Notifying manager about {user} joining {room}")
+        self.bot.send_message(
+            room.manager_user_id,
+            f"User {user.display_name} (@{user.username}) has joined your room {room.short_code:04d}.",
         )

@@ -1,9 +1,7 @@
 from loguru import logger
 from telebot import types
-from telebot.formatting import escape_markdown
 
 from src.applications.bot.callbacks._base import Callback
-from src.applications.bot.utils import text
 from src.models.user import User
 from src.shared.exceptions import MaxNumberOfRoomsReached, UserNotFound
 
