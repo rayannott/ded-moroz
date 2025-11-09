@@ -55,7 +55,7 @@ class Moroz:
             created_by_user_id=created_by_user_id,
             room_name=room_name,
         )
-        logger.info(f"Room created {room}")
+        logger.info(f"Room created {room=}")
         return room
 
     def delete_room(self, room_id: str) -> list[User]:
@@ -77,7 +77,7 @@ class Moroz:
         self.database_repository.delete_room(
             room_id=room_id,
         )
-        logger.info(f"Room deleted: {room_id}")
+        logger.info(f"Room deleted {room_id=}")
         return users_in_room
 
     def join_room_by_short_code(self, user: User, room_short_code: int) -> Room:
@@ -99,6 +99,7 @@ class Moroz:
             user_id=user.id,
             room_id=room.id,
         )
+        logger.info(f"User {user} joined {room}")
         return room
 
     def start_game_in_room(self, room: Room) -> list[tuple[User, User]]:

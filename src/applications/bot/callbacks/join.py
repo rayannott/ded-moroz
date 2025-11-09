@@ -8,16 +8,12 @@ from src.applications.bot.utils import text
 from src.shared.exceptions import (
     RoomNotFound,
     AlreadyInRoom,
-    UserNotFound,
 )
 
 
 class JoinCallback(Callback):
     """
     Join a room by room code.
-
-    show how the user will be displayed to others in the room
-    and ask to set /name if their name is potentially unclear
     """
 
     def process(self, message: types.Message, user: User):
@@ -62,15 +58,6 @@ class JoinCallback(Callback):
                 user=user,
                 room_short_code=room_short_code,
             )
-        except UserNotFound:
-            logger.critical(
-                "UserNotFound raised when joining room; should not have reached here"
-            )
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register first.",
-            )
-            return
         except RoomNotFound:
             self.bot.send_message(
                 message.chat.id,
@@ -98,5 +85,5 @@ class JoinCallback(Callback):
         logger.info(f"Notifying manager about {user} joining {room}")
         self.bot.send_message(
             room.manager_user_id,
-            f"User {user.display_name} (@{user.username}) has joined your room {room.display_short_code}.",
+            f"User {user.display_name} (@{user.username}) has joined your room {room.display_short_code}",
         )

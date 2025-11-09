@@ -3,7 +3,6 @@ from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
-from src.shared.exceptions import UserNotFound
 from src.applications.bot.utils import text
 
 
@@ -14,18 +13,7 @@ class NameCallback(Callback):
     """
 
     def process(self, message: types.Message, user: User):
-        usr = User.from_message(message)
-        logger.info(f"/name from {usr}")
-
-        try:
-            this_user = self.moroz.get_user(usr)
-        except UserNotFound:
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register.",
-            )
-            return
-
+        logger.info(f"/name from {user}")
         self.bot.send_message(
             message.chat.id,
             "Please provide the name you want to use.",
@@ -33,7 +21,7 @@ class NameCallback(Callback):
         self.bot.register_next_step_handler(
             message,
             self._set_name,
-            user=this_user,
+            user=user,
         )
 
     def _set_name(self, message: types.Message, user: User):

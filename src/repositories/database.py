@@ -41,9 +41,8 @@ class DatabaseRepository:
         with self.session() as s:
             s.add(room_orm)
             s.commit()
-
-        logger.debug(f"Add room {room_orm}")
-        return Room.model_validate(room_orm)
+            logger.debug(f"Add room {room_orm}")
+            return Room.model_validate(room_orm)
 
     def assign_target(self, room_id: str, user_id: int, target_user_id: int):
         logger.debug(
@@ -102,7 +101,7 @@ class DatabaseRepository:
             )
             s.add(user_orm)
             s.commit()
-            logger.debug(f"Create user {user_orm}")
+            logger.debug(f"Created user {user_orm}")
             return User.model_validate(user_orm)
 
     def get_room(self, room_id: str) -> Room:
@@ -111,7 +110,7 @@ class DatabaseRepository:
             room_orm = s.get(RoomORM, room_id)
         if room_orm is None:
             raise RoomNotFound(f"Room {room_id=} not found")
-        logger.debug(f"Get room {room_orm}")
+        logger.debug(f"Got {room_orm}")
         return Room.model_validate(room_orm)
 
     def get_user(self, user_id: int) -> User:
@@ -120,7 +119,7 @@ class DatabaseRepository:
             user_orm = s.get(UserORM, user_id)
             if user_orm is None:
                 raise UserNotFound(f"User {user_id=} not found")
-            logger.debug(f"Get user {user_orm}")
+            logger.debug(f"Got {user_orm}")
             return User.model_validate(user_orm)
 
     def get_rooms_managed_by_user(self, user_id: int) -> list[Room]:
@@ -132,7 +131,7 @@ class DatabaseRepository:
             room_orms = (
                 s.query(RoomORM).filter(RoomORM.manager_user_id == user_id).all()
             )
-        logger.debug(f"Get rooms managed by user {user_id=}: {room_orms}")
+        logger.debug(f"Got rooms managed by user {user_id=}: {room_orms}")
         return [Room.model_validate(room_orm) for room_orm in room_orms]
 
     def get_active_rooms_managed_by_user(self, user_id: int) -> list[Room]:
@@ -150,7 +149,7 @@ class DatabaseRepository:
 
         with self.session() as s:
             user_orms = s.query(UserORM).filter(UserORM.room_id == room_id).all()
-        logger.debug(f"Get users in room {room_id=}: {user_orms}")
+        logger.debug(f"Got users in room {room_id=}: {user_orms}")
         return [User.model_validate(user_orm) for user_orm in user_orms]
 
     def join_room(self, user_id: int, room_id: str):
@@ -165,7 +164,7 @@ class DatabaseRepository:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             user_orm.room_id = room_id
             s.commit()
-            logger.debug(f"User {user_id=} joined {room_id=}")
+            logger.debug(f"User {user_orm} joined {room_orm}")
 
     def delete_room(self, room_id: str):
         logger.debug(f"Deleting {room_id=}")
@@ -176,7 +175,7 @@ class DatabaseRepository:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             s.delete(room_orm)
             s.commit()
-            logger.debug(f"Deleted {room_id=}")
+            logger.debug(f"Deleted {room_orm}")
 
     def leave_room(self, user_id: int):
         logger.debug(f"User id={user_id} leaving room")

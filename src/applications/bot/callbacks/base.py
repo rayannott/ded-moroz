@@ -21,14 +21,14 @@ class Callback(ABC):
             logger.warning(f"Message {message} has no from_user; cannot identify user.")
             return
         if message.from_user.is_bot:
-            logger.info(f"Ignoring message from bot user {message.from_user}.")
+            logger.info(f"Ignoring message from bot user {message.from_user}")
             return
 
         usr = User.from_message(message)
 
         try:
             user_actual = self.moroz.get_user(usr)
-            logger.debug(f"{self.__class__.__name__}: {message.text}.")
+            logger.info(f"{self.__class__.__name__} from {user_actual}: {message.text}")
             return self.process(message, user=user_actual)
         except UserNotFound:
             self.bot.send_message(
