@@ -1,3 +1,5 @@
+import random
+
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
 from sqlalchemy import Engine
@@ -5,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from src.models.room import Room
 from src.models.user import User
-from src.repositories.orm.models import Base, RoomORM, UserORM, TargetORM
+from src.repositories.orm.models import Base, RoomORM, TargetORM, UserORM
 from src.shared.exceptions import (
     NotInRoom,
     RoomNotFound,
@@ -13,7 +15,6 @@ from src.shared.exceptions import (
     UserAlreadyExists,
     UserNotFound,
 )
-from src.shared.random_utils import random_code
 
 
 class DatabaseRepository:
@@ -24,9 +25,7 @@ class DatabaseRepository:
 
     def create_room(self, created_by_user_id: int, room_name: str) -> Room:
         logger.debug(f"Creating room {room_name!r} by user id={created_by_user_id}")
-        _ = self.get_user(user_id=created_by_user_id)  # raises if not found
-
-        room_id = random_code()
+        room_id = random.randbytes(4).hex()
         now = DateTime.utcnow()
 
         room_orm = RoomORM(
@@ -42,12 +41,7 @@ class DatabaseRepository:
             s.commit()
 
         logger.debug(f"Add room {room_orm}")
-        return Room(
-            id=room_id,
-            name=room_name,
-            manager_user_id=created_by_user_id,
-            created_dt=now,
-        )
+        return Room.model_validate(room_orm)
 
     def assign_target(self, room_id: str, user_id: int, target_user_id: int):
         logger.debug(
@@ -102,7 +96,7 @@ class DatabaseRepository:
             s.add(user_orm)
             s.commit()
             logger.debug(f"Create user {user_orm}")
-            return User(id=id, username=username, name=name)
+            return User.model_validate(user_orm)
 
     def get_room(self, room_id: str) -> Room:
         logger.debug(f"Getting room {room_id=}")
