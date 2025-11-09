@@ -1,4 +1,3 @@
-import pendulum
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
 from sqlalchemy import Engine
@@ -9,8 +8,6 @@ from src.models.user import User
 from src.repositories.orm.converters import room, user
 from src.repositories.orm.models import Base, RoomORM, UserORM
 from src.shared.exceptions import (
-    AlreadyInRoom,
-    MaxNumberOfRoomsReached,
     NotInRoom,
     RoomNotFound,
     UserAlreadyExists,
@@ -44,7 +41,7 @@ class DatabaseRepository:
             s.add(room_orm)
             s.commit()
 
-        logger.debug(f"Add room {room_orm!r}")
+        logger.debug(f"Add room {room_orm}")
         return Room(
             id=room_id,
             name=room_name,

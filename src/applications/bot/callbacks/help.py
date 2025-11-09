@@ -7,12 +7,12 @@ from src.models.user import User
 
 HELP_MESSAGE = """Available commands:
 /start
-/create
 /join
 /help
-/play
 /name
 /me
+/create
+/manage
 /leave
 """
 

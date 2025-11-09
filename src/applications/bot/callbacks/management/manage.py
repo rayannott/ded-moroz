@@ -2,9 +2,9 @@ from loguru import logger
 from telebot import types
 
 from src.applications.bot.callbacks._base import Callback
-from src.applications.bot.callbacks.management.delete import delete
-from src.applications.bot.callbacks.management.kick import kick
-from src.applications.bot.callbacks.management.play import play
+from src.applications.bot.callbacks.management.delete import DeleteCallback
+from src.applications.bot.callbacks.management.kick import KickCallback
+from src.applications.bot.callbacks.management.play import PlayCallback
 from src.applications.bot.utils import get_keyboard, remove_keyboard, text
 from src.models.room import Room
 from src.models.user import User
@@ -110,35 +110,17 @@ class ManageCallback(Callback):
                 reply_markup=remove_keyboard(),
             )
             logger.info(f"Room management cancelled by {user}")
-            return
-
-        logger.info(
-            f"Action chosen for room {room.short_code:04d} by {user}: {chosen_text}"
-        )
-
-        if chosen_text == _DELETE_ACTION:
-            delete(
-                bot=self.bot,
-                moroz=self.moroz,
-                message=message,
-                room=room,
-                user=user,
+        elif chosen_text == _DELETE_ACTION:
+            DeleteCallback(bot=self.bot, moroz=self.moroz).process_management(
+                message=message, room=room, user=user
             )
         elif chosen_text == _KICK_PLAYER_ACTION:
-            kick(
-                bot=self.bot,
-                moroz=self.moroz,
-                message=message,
-                room=room,
-                user=user,
+            KickCallback(bot=self.bot, moroz=self.moroz).process_management(
+                message=message, room=room, user=user
             )
         elif chosen_text == _START_GAME_ACTION:
-            play(
-                bot=self.bot,
-                moroz=self.moroz,
-                message=message,
-                room=room,
-                user=user,
+            PlayCallback(bot=self.bot, moroz=self.moroz).process_management(
+                message=message, room=room, user=user
             )
         else:
             logger.info(f"Unknown action chosen: {chosen_text} by {user}")

@@ -23,9 +23,6 @@ class UserORM(Base):
     name: Mapped[str | None] = mapped_column(nullable=True)
     room_id: Mapped[str | None] = mapped_column(ForeignKey("rooms.id"), nullable=True)
 
-    def __repr__(self) -> str:
-        return f"UserORM(id={self.id}; @{self.username}, {self.name}, room_id={self.room_id})"
-
 
 class RoomORM(Base):
     __tablename__ = "rooms"
@@ -38,10 +35,3 @@ class RoomORM(Base):
     completed_dt: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-
-    def __repr__(self) -> str:
-        return (
-            f"RoomORM(id={self.id}; short_code={self.short_code:04d}, name={self.name}, "
-            f"manager_user_id={self.manager_user_id}, created_dt={self.created_dt}, "
-            f"completed_dt={self.completed_dt})"
-        )
