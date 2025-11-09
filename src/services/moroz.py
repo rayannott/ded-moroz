@@ -1,5 +1,6 @@
 import random
 from itertools import pairwise
+from dataclasses import dataclass
 
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
@@ -20,16 +21,13 @@ from src.shared.exceptions import (
 )
 
 
+@dataclass
 class Moroz:
     """The main game logic."""
 
-    def __init__(
-        self,
-        database_repository: DatabaseRepository,
-        max_rooms_managed_by_user: int,
-    ):
-        self.database_repository = database_repository
-        self.max_rooms_managed_by_user = max_rooms_managed_by_user
+    database_repository: DatabaseRepository
+    max_rooms_managed_by_user: int
+    min_players_to_start_game: int
 
     def create_room(self, created_by_user_id: int, room_name: str) -> Room:
         """Create a new room managed by the given user
@@ -111,10 +109,10 @@ class Moroz:
     def start_game_in_room(self, room: Room) -> list[tuple[User, User]]:
         logger.info(f"Starting game in room {room}")
         users_in_room = self.database_repository.get_users_in_room(room.id)
-        if len(users_in_room) < 2:
+        if len(users_in_room) < self.min_players_to_start_game:
             raise RoomTooSmall(
                 f"Cannot start game in room {room.id=} with "
-                f"only {len(users_in_room)} users; minimum is 2"
+                f"only {len(users_in_room)} users; minimum is {self.min_players_to_start_game}"
             )
         logger.info(f"Game started in {room} with users {users_in_room}")
         random.shuffle(users_in_room)
