@@ -27,6 +27,14 @@ class Room(BaseModel):
         """Return a zero-padded short code for display purposes."""
         return f"{self.short_code:04d}"
 
+    @property
+    def game_started(self) -> bool:
+        return self.started_at is not None
+
+    @property
+    def game_completed(self) -> bool:
+        return self.completed_dt is not None
+
     @field_validator("created_dt", "started_at", "completed_dt", mode="before")
     @classmethod
     def convert_std_datetime_to_pendulum(cls, v):

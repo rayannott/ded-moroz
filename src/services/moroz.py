@@ -9,6 +9,8 @@ from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from src.shared.exceptions import (
     AlreadyInRoom,
+    GameAlreadyCompleted,
+    GameAlreadyStarted,
     MaxNumberOfRoomsReached,
     NotInRoom,
     RoomNotFound,
@@ -87,14 +89,18 @@ class Moroz:
             `RoomNotFound` if the room does not exist
             `AlreadyInRoom` if the user is already in some room
             `UserNotFound` if the user does not exist
+            `GameAlreadyStarted` if the game in the room has already started
+            `GameAlreadyCompleted` if the game in the room has already completed
         """
         logger.info(f"User {user} joining {room_short_code=}")
-        user_orm = self.database_repository.get_user(user.id)
-        if user_orm.room_id is not None:
-            raise AlreadyInRoom(
-                f"User {user.id=} is already in room id={user_orm.room_id}"
-            )
+        user = self.database_repository.get_user(user.id)
+        if user.room_id is not None:
+            raise AlreadyInRoom(f"User {user.id=} is already in room id={user.room_id}")
         room = self.database_repository.get_room_by_short_code(room_short_code)
+        if room.game_started:
+            raise GameAlreadyStarted(f"Game in room {room.id} has already started")
+        if room.game_completed:
+            raise GameAlreadyCompleted(f"Game in room {room.id} has already completed")
         self.database_repository.join_room(
             user_id=user.id,
             room_id=room.id,
@@ -161,9 +167,7 @@ class Moroz:
             return msg + "\nnot in any room."
         try:
             room = self.database_repository.get_room(this_user.room_id)
-            msg += (
-                f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
-            )
+            msg += f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
             that_room_manager = self.database_repository.get_user(room.manager_user_id)
             msg += f" managed by {that_room_manager.display_name}"
             # TODO show number of participants

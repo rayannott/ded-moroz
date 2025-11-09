@@ -2,6 +2,7 @@ from loguru import logger
 from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
+from src.applications.bot.callbacks.management.complete import CompleteCallback
 from src.applications.bot.callbacks.management.delete import DeleteCallback
 from src.applications.bot.callbacks.management.kick import KickCallback
 from src.applications.bot.callbacks.management.play import PlayCallback
@@ -9,13 +10,34 @@ from src.applications.bot.utils import get_keyboard, remove_keyboard, text
 from src.models.room import Room
 from src.models.user import User
 
-_CANCEL_ACTION = "Cancel"
+_CANCEL_ACTION = "cancel"
+_COMPLETE_ACTION = "complete"
 _DELETE_ACTION = "delete room"
 _KICK_PLAYER_ACTION = "kick player"
 _START_GAME_ACTION = "start game"
 
 
 class ManageCallback(Callback):
+    @staticmethod
+    def get_available_actions(room: Room) -> list[str]:
+        # all except complete if not started and not completed
+        actions = []
+        if not room.game_started and not room.game_completed:
+            actions.extend(
+                [
+                    _DELETE_ACTION,
+                    _START_GAME_ACTION,
+                    _KICK_PLAYER_ACTION,
+                ]
+            )
+        # can only complete if started and not completed
+        elif room.game_started:
+            actions.extend([_COMPLETE_ACTION])
+        # no actions if completed
+
+        actions.append(_CANCEL_ACTION)
+        return actions
+
     def process(self, message: types.Message, user: User):
         logger.info(f"/manage from {user}")
 
@@ -71,9 +93,7 @@ class ManageCallback(Callback):
             )
             return
 
-        actions_kb = get_keyboard(
-            [_DELETE_ACTION, _KICK_PLAYER_ACTION, _START_GAME_ACTION, _CANCEL_ACTION]
-        )
+        actions_kb = get_keyboard(self.get_available_actions(room))
 
         answer = self.bot.send_message(
             message.chat.id,
@@ -95,6 +115,14 @@ class ManageCallback(Callback):
         room: Room,
     ):
         chosen_text = text(message)
+        if chosen_text not in self.get_available_actions(room):
+            logger.info(f"Invalid action chosen: {chosen_text} by {user}")
+            self.bot.send_message(
+                message.chat.id,
+                "Invalid action selected. (How did you do that, huh?)",
+                reply_markup=remove_keyboard(),
+            )
+            return
         if chosen_text == _CANCEL_ACTION:
             self.bot.send_message(
                 message.chat.id,
@@ -112,6 +140,10 @@ class ManageCallback(Callback):
             )
         elif chosen_text == _START_GAME_ACTION:
             PlayCallback(bot=self.bot, moroz=self.moroz).process_management(
+                message=message, room=room, user=user
+            )
+        elif chosen_text == _COMPLETE_ACTION:
+            CompleteCallback(bot=self.bot, moroz=self.moroz).process_management(
                 message=message, room=room, user=user
             )
         else:

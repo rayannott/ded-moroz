@@ -8,6 +8,8 @@ from src.applications.bot.utils import text
 from src.shared.exceptions import (
     RoomNotFound,
     AlreadyInRoom,
+    GameAlreadyStarted,
+    GameAlreadyCompleted,
 )
 
 
@@ -51,7 +53,8 @@ class JoinCallback(Callback):
             logger.info(f"Invalid room ID format entered by {user}: {chosen_text!r}")
             return
 
-        logger.info(f"User {user} joining room with code {room_short_code}")
+        room_short_code_str = f"{room_short_code:04d}"
+        logger.info(f"User {user} joining room with code {room_short_code_str}")
 
         try:
             joined_room = self.moroz.join_room_by_short_code(
@@ -61,7 +64,7 @@ class JoinCallback(Callback):
         except RoomNotFound:
             self.bot.send_message(
                 message.chat.id,
-                f"Room with ID {room_short_code:04d} not found.",
+                f"Room with ID {room_short_code_str} not found.",
             )
             return
         except AlreadyInRoom:
@@ -73,10 +76,22 @@ class JoinCallback(Callback):
                 "You have already joined some room. Please /leave it first.",
             )
             return
+        except GameAlreadyStarted:
+            self.bot.send_message(
+                message.chat.id,
+                f"The game in room {room_short_code_str} has already started. You cannot join now.",
+            )
+            return
+        except GameAlreadyCompleted:
+            self.bot.send_message(
+                message.chat.id,
+                f"The game in room {room_short_code_str} has already completed. You cannot join now.",
+            )
+            return
 
         self.bot.send_message(
             message.chat.id,
-            f"You have successfully joined the room {room_short_code:04d}! 🎉",
+            f"You have successfully joined the room {room_short_code_str}! 🎉",
         )
 
         self._notify_manager(user, joined_room)
