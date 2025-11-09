@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.callbacks.base import Callback
 from src.applications.bot.callbacks.management.delete import DeleteCallback
 from src.applications.bot.callbacks.management.kick import KickCallback
 from src.applications.bot.callbacks.management.play import PlayCallback
@@ -43,7 +43,7 @@ class ManageCallback(Callback):
             message.chat.id,
             "Please select a room to manage:",
             reply_markup=get_keyboard(
-                [f"{room.short_code:04d}" for room in managed_rooms] + [_CANCEL_ACTION]
+                [f"{room.display_short_code}" for room in managed_rooms] + [_CANCEL_ACTION]
             ),
         )
         self.bot.register_next_step_handler(
@@ -85,7 +85,7 @@ class ManageCallback(Callback):
 
         answer = self.bot.send_message(
             message.chat.id,
-            f"You are managing room {room.short_code:04d}. Please choose an action:",
+            f"You are managing room {room.display_short_code}. Please choose an action:",
             reply_markup=actions_kb,
         )
 

@@ -22,6 +22,11 @@ class Room(BaseModel):
         """Return a short numeric code for the room for easier sharing."""
         return int(self.id, 16) % 10_000
 
+    @property
+    def display_short_code(self) -> str:
+        """Return a zero-padded short code for display purposes."""
+        return f"{self.short_code:04d}"
+
     @field_validator("created_dt", "started_at", "completed_dt", mode="before")
     @classmethod
     def convert_std_datetime_to_pendulum(cls, v):

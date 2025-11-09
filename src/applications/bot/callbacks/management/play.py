@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks.management._base import ManagementCallback
+from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import remove_keyboard
 from src.shared.exceptions import RoomTooSmall
 from src.models.room import Room
@@ -35,7 +35,7 @@ class PlayCallback(ManagementCallback):
             logger.debug(f"Notifying {giver} about their target {receiver}")
             self.bot.send_message(
                 giver.id,
-                f"The game in room {room.short_code:04d} has started! You are to give a gift to {receiver.display_name} 🎁",
+                f"The game in room {room.display_short_code} has started! You are to give a gift to {receiver.display_name} 🎁",
             )
 
         participants = ", ".join(
@@ -43,7 +43,7 @@ class PlayCallback(ManagementCallback):
         )
         self.bot.send_message(
             message.chat.id,
-            f"The game in room {room.short_code:04d} has started! All participants ({participants}) have been notified privately.",
+            f"The game in room {room.display_short_code} has started! All participants ({participants}) have been notified privately.",
             reply_markup=remove_keyboard(),
         )
         logger.info(f"Game started in room {room} by user {user}")

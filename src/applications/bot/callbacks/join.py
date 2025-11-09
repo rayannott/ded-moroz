@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
 from src.models.room import Room
 from src.applications.bot.utils import text
@@ -109,5 +109,5 @@ class JoinCallback(Callback):
         logger.info(f"Notifying manager about {user} joining {room}")
         self.bot.send_message(
             room.manager_user_id,
-            f"User {user.display_name} (@{user.username}) has joined your room {room.short_code:04d}.",
+            f"User {user.display_name} (@{user.username}) has joined your room {room.display_short_code}.",
         )

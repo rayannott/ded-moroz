@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks.management._base import ManagementCallback
+from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import remove_keyboard
 from src.models.room import Room
 from src.models.user import User
@@ -26,7 +26,7 @@ class DeleteCallback(ManagementCallback):
 
         self.bot.send_message(
             message.chat.id,
-            f"Room {room.short_code:04d} ({len(users_in_just_deleted_room)} players) deleted successfully. 🎉",
+            f"Room {room.display_short_code} ({len(users_in_just_deleted_room)} players) deleted successfully. 🎉",
             reply_markup=remove_keyboard(),
         )
         logger.info(f"Room {room} deleted by {user}")
@@ -37,7 +37,7 @@ class DeleteCallback(ManagementCallback):
         logger.debug(f"Notifying user {user} about {ex_room} deletion")
         self.bot.send_message(
             user.id,
-            f"The room {ex_room.short_code:04d} you were in has been deleted by its manager. You have been removed from the room.",
+            f"The room {ex_room.display_short_code} you were in has been deleted by its manager. You have been removed from the room.",
         )
 
     def _cleanup_after_room_deletion(

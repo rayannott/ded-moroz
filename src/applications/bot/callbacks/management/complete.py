@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks.management._base import ManagementCallback
+from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import remove_keyboard
 from src.models.room import Room
 from src.models.user import User
@@ -27,7 +27,7 @@ class CompleteCallback(ManagementCallback):
             return
         self.bot.send_message(
             message.chat.id,
-            f"The game in room {room.short_code:04d} has been completed successfully. 🎉",
+            f"The game in room {room.display_short_code} has been completed successfully. 🎉",
             reply_markup=remove_keyboard(),
         )
         logger.info(f"Game in room {room} completed by {user}")
@@ -36,5 +36,5 @@ class CompleteCallback(ManagementCallback):
             logger.debug(f"Notifying user {user} about game completion in {room}")
             self.bot.send_message(
                 user.id,
-                f"The game in room {room.short_code:04d} has been completed by its manager. Thank you for participating!",
+                f"The game in room {room.display_short_code} has been completed by its manager. Thank you for participating!",
             )

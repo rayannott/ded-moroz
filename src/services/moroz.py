@@ -161,7 +161,7 @@ class Moroz:
         try:
             room = self.database_repository.get_room(this_user.room_id)
             msg += (
-                f"\ncurrently in room {room.short_code:04d} (created {room.created_dt})"
+                f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
             )
             that_room_manager = self.database_repository.get_user(room.manager_user_id)
             msg += f" managed by {that_room_manager.display_name}"
@@ -197,6 +197,10 @@ class Moroz:
     def get_user(self, user: User) -> User:
         logger.info(f"Getting {user}")
         return self.database_repository.get_user(user.id)
+
+    def get_room(self, room_id: str) -> Room:
+        logger.info(f"Getting {room_id=}")
+        return self.database_repository.get_room(room_id)
 
     def leave_room(self, user: User):
         """Make the user leave their current room.

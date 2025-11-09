@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.callbacks.base import Callback
 from src.shared.exceptions import UserNotFound, UserAlreadyExists
 from src.models.user import User
 
