@@ -27,22 +27,5 @@ class MeCallback(Callback):
                 "You are not registered yet. Please /start to register.",
             )
             return
-        msg = f"You are {this_user.display_name}"
-        if this_user.username is not None:
-            msg += f" (@{this_user.username})"
-        if this_user.room_id is not None:
-            try:
-                room = self.moroz.database_repository.get_room(this_user.room_id)
-                msg += f"\ncurrently in room {room.short_code:04d}"
-                that_room_manager = self.moroz.database_repository.get_user(
-                    room.manager_user_id
-                )
-                msg += f" managed by {that_room_manager.display_name}"
-                # TODO show number of participants
-            except RoomNotFound:
-                logger.error(
-                    f"User {this_user} is in {this_user.room_id=}, but the room does not exist"
-                )
-            except UserNotFound:
-                logger.opt(exception=True).error("Manager user not found")
+        msg = self.moroz.get_user_information(this_user)
         self.bot.send_message(message.chat.id, msg)

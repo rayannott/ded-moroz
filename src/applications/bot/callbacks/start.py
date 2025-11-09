@@ -26,14 +26,11 @@ class StartCallback(Callback):
         self.bot.send_message(user.id, f"Welcome back, {user.display_name}!")
 
     def process(self, message: types.Message):
-        logger.info(f"/start from {User.from_message(message)}")
-        if message.from_user is None:
-            return
+        usr = User.from_message(message)
+        logger.info(f"/start from {usr}")
 
         try:
-            this_user = self.moroz.database_repository.get_user(
-                user_id=message.from_user.id
-            )
+            this_user = self.moroz.get_user(user=usr)
             self._greet_again(this_user)
         except UserNotFound:
             self._create_user(message)

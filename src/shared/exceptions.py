@@ -44,3 +44,9 @@ class RoomTooSmall(AppError):
     """Raised when game is attempted to start in a room with too few players."""
 
     pass
+
+
+class TargetNotAssigned(AppError):
+    """Raised when a target could not be assigned to a player."""
+
+    pass

@@ -7,6 +7,7 @@ class Room(BaseModel):
     name: str
     manager_user_id: int
     created_dt: DateTime
+    started_at: DateTime | None = None
     completed_dt: DateTime | None = None
 
     def is_active(self) -> bool:
