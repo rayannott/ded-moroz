@@ -1,7 +1,7 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.callbacks.base import Callback
 from src.shared.exceptions import UserNotFound, UserAlreadyExists
 from src.models.user import User
 
@@ -10,6 +10,11 @@ class StartCallback(Callback):
     """Start interaction with the bot.
 
     - add user to database if not exists."""
+
+    def process_wrap(self, message: types.Message):
+        # overriding to NOT check user existence beforehand
+        # since the point of /start is to create user if not exists
+        return self.process(message, User.from_message(message))
 
     def _create_user(self, message: types.Message):
         new_user = User.from_message(message)
@@ -25,7 +30,7 @@ class StartCallback(Callback):
     def _greet_again(self, user: User):
         self.bot.send_message(user.id, f"Welcome back, {user.display_name}!")
 
-    def process(self, message: types.Message):
+    def process(self, message: types.Message, user: User):
         usr = User.from_message(message)
         logger.info(f"/start from {usr}")
 

@@ -1,9 +1,14 @@
-from pydantic import BaseModel
+from datetime import datetime
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_extra_types.pendulum_dt import DateTime
 from telebot import types
 
 
 class User(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
+    joined_dt: DateTime = Field(default_factory=DateTime.utcnow)
     name: str | None
     username: str | None = None
     room_id: str | None = None
@@ -23,3 +28,12 @@ class User(BaseModel):
     @property
     def display_name(self) -> str:
         return self.name or self.username or "Unknown"
+
+    @field_validator("joined_dt", mode="before")
+    @classmethod
+    def convert_std_datetime_to_pendulum(cls, v):
+        if isinstance(v, datetime):
+            return DateTime.fromisoformat(v.isoformat())
+        if v is None:
+            return None
+        return v

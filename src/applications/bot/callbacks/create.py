@@ -1,9 +1,9 @@
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks._base import Callback
+from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
-from src.shared.exceptions import MaxNumberOfRoomsReached, UserNotFound
+from src.shared.exceptions import MaxNumberOfRoomsReached
 
 
 class CreateCallback(Callback):
@@ -15,18 +15,9 @@ class CreateCallback(Callback):
       hence, suggest to /join
     """
 
-    def process(self, message: types.Message):
-        usr = User.from_message(message)
-        logger.info(f"/create from {usr}")
-
-        try:
-            this_user = self.moroz.get_user(usr)
-        except UserNotFound:
-            self.bot.send_message(
-                message.chat.id,
-                "You are not registered yet. Please /start to register.",
-            )
-            return
+    def process(self, message: types.Message, user: User):
+        logger.info(f"/create from {user}")
+        this_user = self.moroz.get_user(user)
 
         try:
             room = self.moroz.create_room(
@@ -44,7 +35,7 @@ class CreateCallback(Callback):
         self.bot.send_message(
             message.chat.id,
             rf"""Room created successfully\! 🎉
-This room ID: `{room.short_code:04d}` \(share this with your friends\)\.
+This room ID: `{room.display_short_code}` \(share this with your friends\)\.
 Note that you are not automatically joined to the room; please /join to enter\.""",
             parse_mode="MarkdownV2",
         )

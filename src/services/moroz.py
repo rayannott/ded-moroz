@@ -9,6 +9,8 @@ from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from src.shared.exceptions import (
     AlreadyInRoom,
+    GameAlreadyCompleted,
+    GameAlreadyStarted,
     MaxNumberOfRoomsReached,
     NotInRoom,
     RoomNotFound,
@@ -55,7 +57,7 @@ class Moroz:
             created_by_user_id=created_by_user_id,
             room_name=room_name,
         )
-        logger.info(f"Room created {room}")
+        logger.info(f"Room created {room=}")
         return room
 
     def delete_room(self, room_id: str) -> list[User]:
@@ -77,7 +79,7 @@ class Moroz:
         self.database_repository.delete_room(
             room_id=room_id,
         )
-        logger.info(f"Room deleted: {room_id}")
+        logger.info(f"Room deleted {room_id=}")
         return users_in_room
 
     def join_room_by_short_code(self, user: User, room_short_code: int) -> Room:
@@ -87,18 +89,23 @@ class Moroz:
             `RoomNotFound` if the room does not exist
             `AlreadyInRoom` if the user is already in some room
             `UserNotFound` if the user does not exist
+            `GameAlreadyStarted` if the game in the room has already started
+            `GameAlreadyCompleted` if the game in the room has already completed
         """
         logger.info(f"User {user} joining {room_short_code=}")
-        user_orm = self.database_repository.get_user(user.id)
-        if user_orm.room_id is not None:
-            raise AlreadyInRoom(
-                f"User {user.id=} is already in room id={user_orm.room_id}"
-            )
+        user = self.database_repository.get_user(user.id)
+        if user.room_id is not None:
+            raise AlreadyInRoom(f"User {user.id=} is already in room id={user.room_id}")
         room = self.database_repository.get_room_by_short_code(room_short_code)
+        if room.game_started:
+            raise GameAlreadyStarted(f"Game in room {room.id} has already started")
+        if room.game_completed:
+            raise GameAlreadyCompleted(f"Game in room {room.id} has already completed")
         self.database_repository.join_room(
             user_id=user.id,
             room_id=room.id,
         )
+        logger.info(f"User {user} joined {room}")
         return room
 
     def start_game_in_room(self, room: Room) -> list[tuple[User, User]]:
@@ -160,9 +167,7 @@ class Moroz:
             return msg + "\nnot in any room."
         try:
             room = self.database_repository.get_room(this_user.room_id)
-            msg += (
-                f"\ncurrently in room {room.short_code:04d} (created {room.created_dt})"
-            )
+            msg += f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
             that_room_manager = self.database_repository.get_user(room.manager_user_id)
             msg += f" managed by {that_room_manager.display_name}"
             # TODO show number of participants
@@ -197,6 +202,10 @@ class Moroz:
     def get_user(self, user: User) -> User:
         logger.info(f"Getting {user}")
         return self.database_repository.get_user(user.id)
+
+    def get_room(self, room_id: str) -> Room:
+        logger.info(f"Getting {room_id=}")
+        return self.database_repository.get_room(room_id)
 
     def leave_room(self, user: User):
         """Make the user leave their current room.
