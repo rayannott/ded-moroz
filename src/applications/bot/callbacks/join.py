@@ -34,9 +34,10 @@ class JoinCallback(Callback):
             return
 
         if user_actual.room_id is not None:
+            room = self.moroz.get_room(user_actual.room_id)
             self.bot.send_message(
                 message.chat.id,
-                f"You have already joined some room ({user_actual.room_id}). Please /leave it first.",
+                f"You have already joined some room {room.display_short_code}. Please /leave it first.",
             )
             return
 
@@ -65,7 +66,7 @@ class JoinCallback(Callback):
             )
             logger.info(f"Invalid room ID format entered by {user}: {chosen_text!r}")
             return
-        
+
         logger.info(f"User {user} joining room with code {room_short_code}")
 
         try:
