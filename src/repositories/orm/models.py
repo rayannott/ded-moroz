@@ -32,6 +32,9 @@ class RoomORM(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     manager_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_dt: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     completed_dt: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )

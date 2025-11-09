@@ -10,7 +10,7 @@ from src.shared.exceptions import RoomNotFound
 
 class DeleteCallback(ManagementCallback):
     def process_management(self, message: types.Message, user: User, room: Room):
-        logger.debug(f"Delete action chosen by {user} in room {room}")
+        logger.debug(f"Delete action chosen by {user} in {room}")
         try:
             users_in_just_deleted_room = self.moroz.delete_room(
                 room_id=room.id,

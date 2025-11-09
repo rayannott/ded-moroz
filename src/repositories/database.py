@@ -10,6 +10,7 @@ from src.repositories.orm.models import Base, RoomORM, UserORM, TargetORM
 from src.shared.exceptions import (
     NotInRoom,
     RoomNotFound,
+    TargetNotAssigned,
     UserAlreadyExists,
     UserNotFound,
 )
@@ -34,7 +35,7 @@ class DatabaseRepository:
             short_code=int(room_id, 16) % 10_000,
             name=room_name,
             manager_user_id=created_by_user_id,
-            created_dt=now.naive(),
+            created_dt=now,
         )
 
         with self.session() as s:
@@ -49,7 +50,7 @@ class DatabaseRepository:
             created_dt=now,
         )
 
-    def add_target(self, room_id: str, user_id: int, target_user_id: int):
+    def assign_target(self, room_id: str, user_id: int, target_user_id: int):
         logger.debug(
             f"Adding target in room {room_id=} for user {user_id=} to target {target_user_id=}"
         )
@@ -62,6 +63,23 @@ class DatabaseRepository:
             s.add(target_orm)
             s.commit()
             logger.debug(f"Added target {target_orm}")
+
+    def get_target(self, room_id: str, user_id: int) -> User:
+        logger.debug(f"Getting target in room {room_id=} for user {user_id=}")
+        with self.session() as s:
+            target_orm = (
+                s.query(TargetORM)
+                .filter(
+                    TargetORM.room_id == room_id,
+                    TargetORM.user_id == user_id,
+                )
+                .first()
+            )
+        if target_orm is None:
+            raise TargetNotAssigned(f"User {user_id=} has no target in room {room_id=}")
+        target_user = self.get_user(user_id=target_orm.target_user_id)
+        logger.debug(f"Got target {target_user} in room {room_id=} for user {user_id=}")
+        return target_user
 
     def get_room_by_short_code(self, short_code: int) -> Room:
         logger.debug(f"Getting room by {short_code=}")
@@ -184,13 +202,28 @@ class DatabaseRepository:
             s.commit()
             logger.debug(f"Set {user_id=} {name=}")
 
-    def set_game_completed(self, room_id: str, started_dt: DateTime):
+    def set_game_started(self, room_id: str, started_dt: DateTime):
         logger.debug(f"Setting game started dt for room {room_id=} to {started_dt=}")
         # raises RoomNotFound
         with self.session() as s:
             room_orm = s.get(RoomORM, room_id)
             if room_orm is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
-            room_orm.game_started_dt = started_dt.naive()
+            room_orm.started_at = started_dt
             s.commit()
             logger.debug(f"Set game started dt for room {room_id=} to {started_dt=}")
+
+    def set_game_completed(self, room_id: str, completed_dt: DateTime):
+        logger.debug(
+            f"Setting game completed dt for room {room_id=} to {completed_dt=}"
+        )
+        # raises RoomNotFound
+        with self.session() as s:
+            room_orm = s.get(RoomORM, room_id)
+            if room_orm is None:
+                raise RoomNotFound(f"Room with {room_id=} not found")
+            room_orm.completed_dt = completed_dt
+            s.commit()
+            logger.debug(
+                f"Set game completed dt for room {room_id=} to {completed_dt=}"
+            )
