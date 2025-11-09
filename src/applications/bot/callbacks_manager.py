@@ -2,7 +2,6 @@ import telebot
 from loguru import logger
 from telebot import types
 
-from src.applications.bot.callbacks.delete import DeleteCallback
 from src.applications.bot.callbacks.create import CreateCallback
 from src.applications.bot.callbacks.echo import EchoCallback
 from src.applications.bot.callbacks.help import HelpCallback
@@ -10,9 +9,8 @@ from src.applications.bot.callbacks.join import JoinCallback
 from src.applications.bot.callbacks.leave import LeaveCallback
 from src.applications.bot.callbacks.me import MeCallback
 from src.applications.bot.callbacks.name import NameCallback
-from src.applications.bot.callbacks.play import PlayCallback
-from src.applications.bot.callbacks.kick import KickCallback
 from src.applications.bot.callbacks.start import StartCallback
+from src.applications.bot.callbacks.management.manage import ManageCallback
 from src.services.moroz import Moroz
 
 
@@ -46,21 +44,13 @@ class CallbacksManager:
         def join_handler(message: types.Message):
             JoinCallback(self.bot, self.moroz).process(message)
 
-        @bot.message_handler(commands=["play"])
-        def play_handler(message: types.Message):
-            PlayCallback(self.bot, self.moroz).process(message)
-
-        @bot.message_handler(commands=["kick"])
-        def kick_handler(message: types.Message):
-            KickCallback(self.bot, self.moroz).process(message)
+        @bot.message_handler(commands=["manage"])
+        def manage_handler(message: types.Message):
+            ManageCallback(self.bot, self.moroz).process(message)
 
         @bot.message_handler(commands=["create"])
         def create_handler(message: types.Message):
             CreateCallback(self.bot, self.moroz).process(message)
-
-        @bot.message_handler(commands=["delete"])
-        def delete_handler(message: types.Message):
-            DeleteCallback(self.bot, self.moroz).process(message)
 
         @bot.message_handler(commands=["name"])
         def name_handler(message: types.Message):

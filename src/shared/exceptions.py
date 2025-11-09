@@ -38,3 +38,9 @@ class UserAlreadyExists(AppError):
     """Raised when trying to create a user that already exists."""
 
     pass
+
+
+class RoomTooSmall(AppError):
+    """Raised when game is attempted to start in a room with too few players."""
+
+    pass
