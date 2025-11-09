@@ -1,11 +1,18 @@
+import random
+from itertools import pairwise
+
 from loguru import logger
+from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.models.room import Room
-from src.repositories.database import DatabaseRepository
 from src.models.user import User
+from src.repositories.database import DatabaseRepository
 from src.shared.exceptions import (
-    MaxNumberOfRoomsReached,
     AlreadyInRoom,
+    MaxNumberOfRoomsReached,
+    NotInRoom,
+    RoomTooSmall,
+    UserNotFound,
 )
 
 
@@ -49,17 +56,27 @@ class Moroz:
         logger.info(f"Room created {room}")
         return room
 
-    def delete_room(self, room_id: str):
+    def delete_room(self, room_id: str) -> list[User]:
         """Delete the given room if the user is its manager.
 
         Raises
             `RoomNotFound` if the room does not exist
         """
         logger.info(f"Deleting room id={room_id} by its manager")
+        users_in_room = self.database_repository.get_users_in_room(room_id)
+        for user in users_in_room:
+            try:
+                self.leave_room(user)
+            except (UserNotFound, NotInRoom):
+                logger.opt(exception=True).critical(
+                    f"Error removing user {user} from deleted room id={room_id}"
+                )
+            logger.info(f"User {user} removed from deleted room id={room_id}")
         self.database_repository.delete_room(
             room_id=room_id,
         )
         logger.info(f"Room deleted: {room_id}")
+        return users_in_room
 
     def join_room_by_short_code(self, user: User, room_short_code: int) -> Room:
         """Join the user to the given room.
@@ -81,6 +98,32 @@ class Moroz:
             room_id=room.id,
         )
         return room
+
+    def start_game_in_room(self, room: Room) -> list[tuple[User, User]]:
+        logger.info(f"Starting game in room {room}")
+        users_in_room = self.database_repository.get_users_in_room(room.id)
+        if len(users_in_room) < 2:
+            raise RoomTooSmall(
+                f"Cannot start game in room {room.id=} with "
+                f"only {len(users_in_room)} users; minimum is 2"
+            )
+        logger.info(f"Game started in room {room} with users {users_in_room}")
+        random.shuffle(users_in_room)
+        target_pairs: list[tuple[User, User]] = [
+            (user, target)
+            for user, target in pairwise(users_in_room + [users_in_room[0]])
+        ]
+        for user, target in target_pairs:
+            self.database_repository.add_target(
+                room_id=room.id,
+                user_id=user.id,
+                target_user_id=target.id,
+            )
+        self.database_repository.set_game_completed(
+            room_id=room.id,
+            started_dt=DateTime.utcnow(),
+        )
+        return target_pairs
 
     def get_active_rooms_managed_by_user(self, user: User) -> list[Room]:
         logger.info(f"Getting active rooms managed by {user}")

@@ -35,3 +35,12 @@ class RoomORM(Base):
     completed_dt: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class TargetORM(Base):
+    __tablename__ = "targets"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    room_id: Mapped[str] = mapped_column(ForeignKey("rooms.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    target_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)

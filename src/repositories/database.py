@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from src.models.room import Room
 from src.models.user import User
 from src.repositories.orm.converters import room, user
-from src.repositories.orm.models import Base, RoomORM, UserORM
+from src.repositories.orm.models import Base, RoomORM, UserORM, TargetORM
 from src.shared.exceptions import (
     NotInRoom,
     RoomNotFound,
@@ -48,6 +48,20 @@ class DatabaseRepository:
             manager_user_id=created_by_user_id,
             created_dt=now,
         )
+
+    def add_target(self, room_id: str, user_id: int, target_user_id: int):
+        logger.debug(
+            f"Adding target in room {room_id=} for user {user_id=} to target {target_user_id=}"
+        )
+        with self.session() as s:
+            target_orm = TargetORM(
+                room_id=room_id,
+                user_id=user_id,
+                target_user_id=target_user_id,
+            )
+            s.add(target_orm)
+            s.commit()
+            logger.debug(f"Added target {target_orm}")
 
     def get_room_by_short_code(self, short_code: int) -> Room:
         logger.debug(f"Getting room by {short_code=}")
@@ -169,3 +183,14 @@ class DatabaseRepository:
             user_orm.name = name
             s.commit()
             logger.debug(f"Set {user_id=} {name=}")
+
+    def set_game_completed(self, room_id: str, started_dt: DateTime):
+        logger.debug(f"Setting game started dt for room {room_id=} to {started_dt=}")
+        # raises RoomNotFound
+        with self.session() as s:
+            room_orm = s.get(RoomORM, room_id)
+            if room_orm is None:
+                raise RoomNotFound(f"Room with {room_id=} not found")
+            room_orm.game_started_dt = started_dt.naive()
+            s.commit()
+            logger.debug(f"Set game started dt for room {room_id=} to {started_dt=}")
