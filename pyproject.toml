@@ -26,3 +26,11 @@ test = [
     "pytest-cov>=7.0.0",
     "pytest-loguru>=0.4.0",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.mypy]
+explicit_package_bases = true
+check_untyped_defs = true
+ignore_missing_imports = true
