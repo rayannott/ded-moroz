@@ -7,11 +7,6 @@ from src.applications.bot.utils import text
 
 
 class NameCallback(Callback):
-    """
-    Set the name of the user,
-    overriding `message.chat.first_name`.
-    """
-
     def process(self, message: types.Message, user: User):
         logger.info(f"/name from {user}")
         self.bot.send_message(
@@ -26,7 +21,7 @@ class NameCallback(Callback):
 
     def _set_name(self, message: types.Message, user: User):
         new_name = text(message).strip()
-        logger.info(f"Setting name for {user} to {new_name!r}")
+        logger.debug(f"Setting name for {user} to {new_name!r}")
 
         self.moroz.update_name(user, new_name)
 
@@ -34,4 +29,4 @@ class NameCallback(Callback):
             message.chat.id,
             f"Your name has been set to '{new_name}'.",
         )
-        logger.info(f"Name for {user} set to {new_name!r}")
+        logger.debug(f"Name for {user} set to {new_name!r}")

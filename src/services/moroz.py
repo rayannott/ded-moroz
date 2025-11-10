@@ -13,11 +13,8 @@ from src.shared.exceptions import (
     GameAlreadyCompleted,
     GameAlreadyStarted,
     MaxNumberOfRoomsReached,
-    NotInRoom,
-    RoomNotFound,
     RoomTooSmall,
     TargetNotAssigned,
-    UserNotFound,
 )
 
 
@@ -55,7 +52,7 @@ class Moroz:
             created_by_user_id=created_by_user_id,
             room_name=room_name,
         )
-        logger.info(f"Room created {room=}")
+        logger.success(f"Room created {room=}")
         return room
 
     def delete_room(self, room_id: str) -> list[User]:
@@ -67,17 +64,11 @@ class Moroz:
         logger.info(f"Deleting {room_id=} by its manager")
         users_in_room = self.database_repository.get_users_in_room(room_id)
         for user in users_in_room:
-            try:
-                self.leave_room(user)
-            except (UserNotFound, NotInRoom):
-                logger.opt(exception=True).critical(
-                    f"Error removing user {user} from deleted room id={room_id}"
-                )
-            logger.info(f"User {user} removed from deleted room id={room_id}")
+            self.leave_room(user)
         self.database_repository.delete_room(
             room_id=room_id,
         )
-        logger.info(f"Room deleted {room_id=}")
+        logger.success(f"Room deleted {room_id=}")
         return users_in_room
 
     def join_room_by_short_code(self, user: User, room_short_code: int) -> Room:
@@ -103,7 +94,7 @@ class Moroz:
             user_id=user.id,
             room_id=room.id,
         )
-        logger.info(f"User {user} joined {room}")
+        logger.success(f"User {user} joined {room}")
         return room
 
     def start_game_in_room(self, room: Room) -> list[tuple[User, User]]:
@@ -120,16 +111,15 @@ class Moroz:
             (user, target)
             for user, target in pairwise(users_in_room + [users_in_room[0]])
         ]
-        for user, target in target_pairs:
-            self.database_repository.assign_target(
-                room_id=room.id,
-                user_id=user.id,
-                target_user_id=target.id,
-            )
+        self.database_repository.assign_targets(
+            room_id=room.id,
+            user_target_pairs=[(user.id, target.id) for user, target in target_pairs],
+        )
         self.database_repository.set_game_started(
             room_id=room.id,
             started_dt=DateTime.utcnow(),
         )
+        logger.success(f"Game started in room {room}")
         return target_pairs
 
     def complete_game_in_room(self, room: Room) -> list[User]:
@@ -140,20 +130,23 @@ class Moroz:
             completed_dt=DateTime.utcnow(),
         )
         for usr in users_in_room:
-            self.database_repository.leave_room(user_id=usr.id)
+            self.leave_room(user=usr)
+        logger.success(f"Game completed in room {room}")
         return users_in_room
 
     def get_active_rooms_managed_by_user(self, user: User) -> list[Room]:
         logger.info(f"Getting active rooms managed by {user}")
         return self.database_repository.get_active_rooms_managed_by_user(user.id)
 
-    def create_user(self, user: User):
+    def create_user(self, user: User) -> User:
         logger.info(f"Creating {user}")
-        self.database_repository.create_user(
+        new_user = self.database_repository.create_user(
             id=user.id,
             username=user.username,
             name=user.name,
         )
+        logger.success(f"Created {new_user}")
+        return new_user
 
     def get_user_information(self, user: User) -> str:
         logger.info(f"Getting information about {user}")
@@ -162,40 +155,34 @@ class Moroz:
         if this_user.username is not None:
             msg += f" (@{this_user.username})"
         if this_user.room_id is None:
+            logger.success(f"Got information about {this_user} (not in any room).")
             return msg + "\nnot in any room."
-        try:
-            room = self.database_repository.get_room(this_user.room_id)
-            msg += f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
-            that_room_manager = self.database_repository.get_user(room.manager_user_id)
-            msg += f" managed by {that_room_manager.display_name}"
-            # TODO show number of participants
-        except RoomNotFound:
-            logger.error(
-                f"User {this_user} is in {this_user.room_id=}, but the room does not exist"
-            )
-            return msg
-        except UserNotFound:
-            logger.opt(exception=True).error("Manager user not found")
-            return msg
+        room = self.database_repository.get_room(this_user.room_id)
+        msg += (
+            f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
+        )
+        that_room_manager = self.database_repository.get_user(room.manager_user_id)
+        msg += f" managed by {that_room_manager.display_name}"
+        # TODO show number of participants
         try:
             target = self.database_repository.get_target(
                 this_user.room_id, this_user.id
             )
             started_at = (
-                room.started_at if room.started_at is not None else "unknown time"
+                room.started_dt if room.started_dt is not None else "unknown time"
             )
             if started_at == "unknown time":
-                logger.error(f"Game in room {room} has started but started_at is None")
+                logger.error(f"Game in room {room} has started but started_dt is None")
             msg += f"\nYour target is {target.display_name} (assigned when game started at {started_at})"
         except TargetNotAssigned:
             msg += "\nGame has not started yet; no target assigned"
-        except UserNotFound:
-            logger.opt(exception=True).error("Target user not found")
+        logger.success(f"Got information about {this_user}.")
         return msg
 
     def update_name(self, user: User, name: str):
         logger.info(f"Updating {user} name to {name}")
         self.database_repository.set_user_name(user.id, name)
+        logger.success(f"Updated {user} name to {name}")
 
     def get_user(self, user: User) -> User:
         logger.info(f"Getting {user}")
@@ -205,7 +192,7 @@ class Moroz:
         logger.info(f"Getting {room_id=}")
         return self.database_repository.get_room(room_id)
 
-    def leave_room(self, user: User):
+    def leave_room(self, user: User) -> Room:
         """Make the user leave their current room.
 
         Raises
@@ -213,8 +200,6 @@ class Moroz:
             `NotInRoom` if the user is not in any room
         """
         logger.info(f"User {user} leaving room id={user}")
-        self.database_repository.leave_room(user.id)
-
-    def set_user_name(self, user: User, name: str):
-        logger.info(f"Setting {user} name to {name}")
-        self.database_repository.set_user_name(user.id, name)
+        left_room = self.database_repository.leave_room(user.id)
+        logger.success(f"User {user} left their room")
+        return left_room

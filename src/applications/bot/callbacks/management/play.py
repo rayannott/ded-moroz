@@ -15,7 +15,7 @@ class PlayCallback(ManagementCallback):
         try:
             target_pairs = self.moroz.start_game_in_room(room)
         except RoomTooSmall:
-            logger.info(f"Attempt to start game in too small {room.id=} by user {user}")
+            logger.debug(f"Attempt to start game in too small {room.id=} by user {user}")
             self.bot.send_message(
                 message.chat.id,
                 "Cannot start the game: not enough players in the room (need at least 2).",
@@ -46,4 +46,4 @@ class PlayCallback(ManagementCallback):
             f"The game in room {room.display_short_code} has started! All participants ({participants}) have been notified privately.",
             reply_markup=remove_keyboard(),
         )
-        logger.info(f"Game started in room {room} by user {user}")
+        logger.debug(f"Game started in room {room} by user {user}")

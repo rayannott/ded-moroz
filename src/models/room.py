@@ -17,7 +17,7 @@ class Room(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), nullable=False),
         default_factory=utcnow,
     )
-    started_at: Optional[AwareDatetime] = Field(
+    started_dt: Optional[AwareDatetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     completed_dt: Optional[AwareDatetime] = Field(
@@ -33,7 +33,7 @@ class Room(SQLModel, table=True):
 
     @property
     def game_started(self) -> bool:
-        return self.started_at is not None
+        return self.started_dt is not None
 
     @property
     def game_completed(self) -> bool:

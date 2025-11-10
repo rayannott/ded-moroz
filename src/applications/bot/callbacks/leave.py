@@ -2,22 +2,16 @@ from loguru import logger
 from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
-from src.shared.exceptions import NotInRoom
-
+from src.models.room import Room
 from src.models.user import User
+from src.shared.exceptions import NotInRoom
 
 
 class LeaveCallback(Callback):
-    """
-    Leave the room that user is currently in, if any.
-
-    notify that room's manager.
-    """
-
     def process(self, message: types.Message, user: User):
         logger.info(f"/leave from {user}")
         try:
-            self.moroz.leave_room(user)
+            left_room = self.moroz.leave_room(user)
         except NotInRoom:
             self.bot.send_message(
                 message.chat.id,
@@ -28,4 +22,13 @@ class LeaveCallback(Callback):
         self.bot.send_message(
             message.chat.id,
             "You have successfully left the room! 🎉",
+        )
+
+        self._notify_manager(user, left_room)
+
+    def _notify_manager(self, user: User, room: Room):
+        logger.debug(f"Notifying manager about {user} leaving {room}")
+        self.bot.send_message(
+            room.manager_user_id,
+            f"User {user.display_name} (@{user.username}) has left your room {room.display_short_code}",
         )

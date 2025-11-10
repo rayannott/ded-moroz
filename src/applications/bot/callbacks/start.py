@@ -8,10 +8,6 @@ from src.shared.exceptions import UserAlreadyExists, UserNotFound
 
 
 class StartCallback(Callback):
-    """Start interaction with the bot.
-
-    - add user to database if not exists."""
-
     def process_wrap(self, message: types.Message):
         # overriding to NOT check user existence beforehand
         # since the point of /start is to create user if not exists

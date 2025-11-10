@@ -26,7 +26,7 @@ class CompleteCallback(ManagementCallback):
             f"The game in room {room.display_short_code} has been completed successfully. 🎉",
             reply_markup=remove_keyboard(),
         )
-        logger.info(f"Game in room {room} completed by {user}")
+        logger.debug(f"Game in room {room} completed by {user}")
 
         for user in users_in_just_completed_room:
             logger.debug(f"Notifying user {user} about game completion in {room}")

@@ -7,14 +7,6 @@ from src.shared.exceptions import MaxNumberOfRoomsReached
 
 
 class CreateCallback(Callback):
-    """
-    Create a new room.
-
-    - show the room code
-    - note that the manager is not automatically joined to the room;
-      hence, suggest to /join
-    """
-
     def process(self, message: types.Message, user: User):
         logger.info(f"/create from {user}")
         this_user = self.moroz.get_user(user)

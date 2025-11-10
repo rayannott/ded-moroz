@@ -14,10 +14,6 @@ from src.shared.exceptions import (
 
 
 class JoinCallback(Callback):
-    """
-    Join a room by room code.
-    """
-
     def process(self, message: types.Message, user: User):
         if user.room_id is not None:
             room = self.moroz.get_room(user.room_id)

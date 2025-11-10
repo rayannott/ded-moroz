@@ -80,10 +80,10 @@ class ManageCallback(Callback):
                 "Room management cancelled.",
                 reply_markup=remove_keyboard(),
             )
-            logger.info(f"Room management cancelled by {user}")
+            logger.debug(f"Room management cancelled by {user}")
             return
         room_short_code = int(chosen_text)
-        logger.info(f"Room to manage chosen: {room_short_code} by {user}")
+        logger.debug(f"Room to manage chosen: {room_short_code} by {user}")
 
         room = code_to_room.get(room_short_code)
         if room is None:
@@ -116,7 +116,7 @@ class ManageCallback(Callback):
     ):
         chosen_text = text(message)
         if chosen_text not in self.get_available_actions(room):
-            logger.info(f"Invalid action chosen: {chosen_text} by {user}")
+            logger.debug(f"Invalid action chosen: {chosen_text} by {user}")
             self.bot.send_message(
                 message.chat.id,
                 "Invalid action selected. (How did you do that, huh?)",
@@ -129,7 +129,7 @@ class ManageCallback(Callback):
                 "Room management cancelled.",
                 reply_markup=remove_keyboard(),
             )
-            logger.info(f"Room management cancelled by {user}")
+            logger.debug(f"Room management cancelled by {user}")
         elif chosen_text == _DELETE_ACTION:
             DeleteCallback(bot=self.bot, moroz=self.moroz).process_management(
                 message=message, room=room, user=user
@@ -147,7 +147,7 @@ class ManageCallback(Callback):
                 message=message, room=room, user=user
             )
         else:
-            logger.info(f"Unknown action chosen: {chosen_text} by {user}")
+            logger.debug(f"Unknown action chosen: {chosen_text} by {user}")
             self.bot.send_message(
                 message.chat.id,
                 "Unknown action selected.",
