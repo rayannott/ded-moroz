@@ -43,19 +43,16 @@ class DatabaseRepository:
             logger.debug(f"Added room {room}")
             return room
 
-    def assign_target(self, room_id: str, user_id: int, target_user_id: int):
-        logger.debug(
-            f"Adding target in room {room_id=} for user {user_id=} to target {target_user_id=}"
-        )
+    def assign_target(self, room_id: str, user_target_pairs: list[tuple[int, int]]):
+        logger.debug(f"Adding targets in room {room_id=}: {user_target_pairs=}")
         with self.session() as s:
-            target_orm = Target(
-                room_id=room_id,
-                user_id=user_id,
-                target_user_id=target_user_id,
-            )
-            s.add(target_orm)
+            targets = [
+                Target(room_id=room_id, user_id=u_id, target_user_id=t_id)
+                for u_id, t_id in user_target_pairs
+            ]
+            s.add_all(targets)
             s.commit()
-            logger.debug(f"Added target {target_orm}")
+            logger.debug(f"Added {len(targets)} targets for {room_id=}")
 
     def get_target(self, room_id: str, user_id: int) -> User:
         logger.debug(f"Getting target in room {room_id=} for user {user_id=}")
