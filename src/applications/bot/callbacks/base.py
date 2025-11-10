@@ -7,6 +7,7 @@ from telebot import types
 from src.models.user import User
 from src.services.moroz import Moroz
 from src.shared.exceptions import UserNotFound
+from src.applications.bot.utils import user_from_message
 
 
 class Callback(ABC):
@@ -24,7 +25,7 @@ class Callback(ABC):
             logger.info(f"Ignoring message from bot user {message.from_user}")
             return
 
-        usr = User.from_message(message)
+        usr = user_from_message(message)
 
         try:
             user_actual = self.moroz.get_user(usr)

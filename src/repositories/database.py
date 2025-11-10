@@ -1,15 +1,13 @@
 import random
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
 from sqlalchemy import Engine
 from sqlalchemy.orm import sessionmaker
+from sqlmodel import SQLModel
 
 from src.models.room import Room
 from src.models.user import User
-from src.repositories.orm.models import Base, RoomORM, TargetORM, UserORM
 from src.shared.exceptions import (
     NotInRoom,
     RoomNotFound,
@@ -22,27 +20,26 @@ from src.shared.exceptions import (
 class DatabaseRepository:
     def __init__(self, engine: Engine):
         self.engine = engine
-        Base.metadata.create_all(self.engine)
+        SQLModel.metadata.create_all(engine)
         self.session = sessionmaker(engine)
 
     def create_room(self, created_by_user_id: int, room_name: str) -> Room:
         logger.debug(f"Creating room {room_name!r} by user id={created_by_user_id}")
         room_id = random.randbytes(4).hex()
-        now = DateTime.utcnow()
 
-        room_orm = RoomORM(
+        room = Room(
             id=room_id,
             short_code=int(room_id, 16) % 10_000,
             name=room_name,
             manager_user_id=created_by_user_id,
-            created_dt=now,
         )
 
         with self.session() as s:
-            s.add(room_orm)
+            s.add(room)
             s.commit()
-            logger.debug(f"Add room {room_orm}")
-            return Room.model_validate(room_orm)
+            s.refresh(room)
+            logger.debug("Added room %s", room)
+            return room
 
     def assign_target(self, room_id: str, user_id: int, target_user_id: int):
         logger.debug(
@@ -90,19 +87,21 @@ class DatabaseRepository:
     def create_user(self, id: int, username: str | None, name: str | None) -> User:
         logger.debug(f"Creating user {id=}, {username=}, {name=}")
         with self.session() as s:
-            if s.get(UserORM, id) is not None:
-                raise UserAlreadyExists(f"User {id=} already exists")
+            if s.get(User, id) is not None:
+                raise UserAlreadyExists(f"User id={id} already exists")
 
-            user_orm = UserORM(
+            user = User(
                 id=id,
                 username=username,
                 name=name,
-                joined_dt=datetime.now(tz=ZoneInfo("UTC")),
+                joined_dt=DateTime.utcnow(),
             )
-            s.add(user_orm)
+
+            s.add(user)
             s.commit()
-            logger.debug(f"Created user {user_orm}")
-            return User.model_validate(user_orm)
+            s.refresh(user)
+            logger.debug("Created user %s", user)
+            return user
 
     def get_room(self, room_id: str) -> Room:
         logger.debug(f"Getting room {room_id=}")
@@ -116,11 +115,11 @@ class DatabaseRepository:
     def get_user(self, user_id: int) -> User:
         logger.debug(f"Getting user {user_id=}")
         with self.session() as s:
-            user_orm = s.get(UserORM, user_id)
-            if user_orm is None:
-                raise UserNotFound(f"User {user_id=} not found")
-            logger.debug(f"Got {user_orm}")
-            return User.model_validate(user_orm)
+            user = s.get(User, user_id)
+        if user is None:
+            raise UserNotFound(f"User {user_id=} not found")
+        logger.debug(f"Got {user}")
+        return user
 
     def get_rooms_managed_by_user(self, user_id: int) -> list[Room]:
         logger.debug(f"Getting rooms managed by user {user_id=}")
