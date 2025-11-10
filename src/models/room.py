@@ -1,14 +1,13 @@
-from datetime import datetime
-from typing import Optional
-from zoneinfo import ZoneInfo
+from typing import TYPE_CHECKING, Optional
 
-from pydantic import AwareDatetime as DateTime
-from sqlalchemy import DateTime as SADateTime
-from sqlalchemy import Integer
-from sqlmodel import Column, Field, SQLModel
+from pydantic import AwareDatetime
+from sqlmodel import Column, Field, Integer, Relationship, SQLModel
+from sqlmodel import DateTime
 
-def utcnow() -> datetime:
-    return datetime.now(tz=ZoneInfo("UTC"))
+from src.shared.times import utcnow
+
+if TYPE_CHECKING:
+    from src.models.user import User
 
 
 class Room(SQLModel, table=True):
@@ -18,15 +17,26 @@ class Room(SQLModel, table=True):
 
     manager_user_id: int = Field(foreign_key="user.id", nullable=False)
 
-    created_dt: DateTime = Field(
-        sa_column=Column(SADateTime(timezone=True), nullable=False),
+    created_dt: AwareDatetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False),
         default_factory=utcnow,
     )
-    started_at: Optional[DateTime] = Field(
-        default=None, sa_column=Column(SADateTime(timezone=True), nullable=True)
+    started_at: Optional[AwareDatetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
-    completed_dt: Optional[DateTime] = Field(
-        default=None, sa_column=Column(SADateTime(timezone=True), nullable=True)
+    completed_dt: Optional[AwareDatetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+
+    # relationships
+    manager: Optional["User"] = Relationship(
+        back_populates="managed_rooms",
+        sa_relationship_kwargs=dict(foreign_keys="[Room.manager_user_id]"),
+    )
+
+    players: list["User"] = Relationship(
+        back_populates="room",
+        sa_relationship_kwargs=dict(foreign_keys="[User.room_id]"),
     )
 
     def is_active(self) -> bool:

@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 
 from src.models.room import Room
-from src.models.user import User
 from src.models.target import Target
+from src.models.user import User
 from src.shared.exceptions import (
     NotInRoom,
     RoomNotFound,
@@ -16,6 +16,7 @@ from src.shared.exceptions import (
     UserAlreadyExists,
     UserNotFound,
 )
+from src.shared.times import utcnow
 
 
 class DatabaseRepository:
@@ -62,8 +63,8 @@ class DatabaseRepository:
             target_orm = (
                 s.query(Target)
                 .filter(
-                    Target.room_id == room_id,
-                    Target.user_id == user_id,
+                    Target.room_id == room_id,  # type: ignore[arg-type]
+                    Target.user_id == user_id,  # type: ignore[arg-type]
                 )
                 .first()
             )
@@ -76,7 +77,7 @@ class DatabaseRepository:
     def get_room_by_short_code(self, short_code: int) -> Room:
         logger.debug(f"Getting room by {short_code=}")
         with self.session() as s:
-            rooms = s.query(Room).filter(Room.short_code == short_code).all()
+            rooms = s.query(Room).filter(Room.short_code == short_code).all()  # type: ignore[arg-type]
         if not rooms:
             raise RoomNotFound(f"Room {short_code=} not found")
         if len(rooms) > 1:
@@ -95,7 +96,7 @@ class DatabaseRepository:
                 id=id,
                 username=username,
                 name=name,
-                joined_dt=DateTime.utcnow(),
+                joined_dt=utcnow(),
             )
 
             s.add(user)
@@ -128,7 +129,7 @@ class DatabaseRepository:
         _ = self.get_user(user_id=user_id)  # raises if not found
 
         with self.session() as s:
-            rooms = s.query(Room).filter(Room.manager_user_id == user_id).all()
+            rooms = s.query(Room).filter(Room.manager_user_id == user_id).all()  # type: ignore[arg-type]
         logger.debug(f"Got rooms managed by user {user_id=}: {rooms}")
         return rooms
 
@@ -146,7 +147,7 @@ class DatabaseRepository:
         _ = self.get_room(room_id=room_id)  # raises if not found
 
         with self.session() as s:
-            users = s.query(User).filter(User.room_id == room_id).all()
+            users = s.query(User).filter(User.room_id == room_id).all()  # type: ignore[arg-type]
         logger.debug(f"Got users in room {room_id=}: {users}")
         return users
 

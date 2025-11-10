@@ -16,7 +16,7 @@ dotenv.load_dotenv()
 class ApplicationContainer(DeclarativeContainer):
     config = Configuration()
     config.from_pydantic(Settings())  # type: ignore
-    config = cast(Settings, config)
+    config = cast(Settings, config)  # type: ignore[assignment]
 
     db_engine = Singleton(create_engine, config.database_url)
 
