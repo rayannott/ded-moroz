@@ -39,7 +39,7 @@ class DatabaseRepository:
             s.add(room)
             s.commit()
             s.refresh(room)
-            logger.debug("Added room %s", room)
+            logger.debug(f"Added room {room}")
             return room
 
     def assign_target(self, room_id: str, user_id: int, target_user_id: int):
@@ -76,14 +76,14 @@ class DatabaseRepository:
     def get_room_by_short_code(self, short_code: int) -> Room:
         logger.debug(f"Getting room by {short_code=}")
         with self.session() as s:
-            room_orms = s.query(Room).filter(Room.short_code == short_code).all()
-        if not room_orms:
+            rooms = s.query(Room).filter(Room.short_code == short_code).all()
+        if not rooms:
             raise RoomNotFound(f"Room {short_code=} not found")
-        if len(room_orms) > 1:
-            logger.warning(f"More than one room found with {short_code=}: {room_orms}")
-            return max(room_orms, key=lambda r: r.created_dt)
-        logger.debug(f"Get room by {short_code=}: {room_orms[0]}")
-        return Room.model_validate(room_orms[0])
+        if len(rooms) > 1:
+            logger.warning(f"More than one room found with {short_code=}: {rooms}")
+            return max(rooms, key=lambda r: r.created_dt)
+        logger.debug(f"Get room by {short_code=}: {rooms[0]}")
+        return rooms[0]
 
     def create_user(self, id: int, username: str | None, name: str | None) -> User:
         logger.debug(f"Creating user {id=}, {username=}, {name=}")
@@ -101,17 +101,17 @@ class DatabaseRepository:
             s.add(user)
             s.commit()
             s.refresh(user)
-            logger.debug("Created user %s", user)
+            logger.debug(f"Created user {user}")
             return user
 
     def get_room(self, room_id: str) -> Room:
         logger.debug(f"Getting room {room_id=}")
         with self.session() as s:
-            room_orm = s.get(Room, room_id)
-        if room_orm is None:
+            room = s.get(Room, room_id)
+        if room is None:
             raise RoomNotFound(f"Room {room_id=} not found")
-        logger.debug(f"Got {room_orm}")
-        return Room.model_validate(room_orm)
+        logger.debug(f"Got {room}")
+        return room
 
     def get_user(self, user_id: int) -> User:
         logger.debug(f"Getting user {user_id=}")
@@ -128,9 +128,9 @@ class DatabaseRepository:
         _ = self.get_user(user_id=user_id)  # raises if not found
 
         with self.session() as s:
-            room_orms = s.query(Room).filter(Room.manager_user_id == user_id).all()
-        logger.debug(f"Got rooms managed by user {user_id=}: {room_orms}")
-        return [Room.model_validate(room_orm) for room_orm in room_orms]
+            rooms = s.query(Room).filter(Room.manager_user_id == user_id).all()
+        logger.debug(f"Got rooms managed by user {user_id=}: {rooms}")
+        return rooms
 
     def get_active_rooms_managed_by_user(self, user_id: int) -> list[Room]:
         logger.debug(f"Getting active rooms managed by user {user_id=}")
@@ -146,9 +146,9 @@ class DatabaseRepository:
         _ = self.get_room(room_id=room_id)  # raises if not found
 
         with self.session() as s:
-            user_orms = s.query(User).filter(User.room_id == room_id).all()
-        logger.debug(f"Got users in room {room_id=}: {user_orms}")
-        return [User.model_validate(user_orm) for user_orm in user_orms]
+            users = s.query(User).filter(User.room_id == room_id).all()
+        logger.debug(f"Got users in room {room_id=}: {users}")
+        return users
 
     def join_room(self, user_id: int, room_id: str):
         logger.debug(f"User {user_id=} joining {room_id=}")
