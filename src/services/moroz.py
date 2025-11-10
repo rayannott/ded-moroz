@@ -192,7 +192,7 @@ class Moroz:
         logger.info(f"Getting {room_id=}")
         return self.database_repository.get_room(room_id)
 
-    def leave_room(self, user: User):
+    def leave_room(self, user: User) -> Room:
         """Make the user leave their current room.
 
         Raises
@@ -200,5 +200,6 @@ class Moroz:
             `NotInRoom` if the user is not in any room
         """
         logger.info(f"User {user} leaving room id={user}")
-        self.database_repository.leave_room(user.id)
+        left_room = self.database_repository.leave_room(user.id)
         logger.success(f"User {user} left their room")
+        return left_room

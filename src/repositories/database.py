@@ -173,7 +173,7 @@ class DatabaseRepository:
             s.commit()
             logger.debug(f"Deleted {room}")
 
-    def leave_room(self, user_id: int):
+    def leave_room(self, user_id: int) -> Room:
         logger.debug(f"User id={user_id} leaving room")
         # raises UserNotFound, NotInRoom
         with self.session() as s:
@@ -182,9 +182,11 @@ class DatabaseRepository:
                 raise UserNotFound(f"User with id={user_id} not found")
             if (room_id := user.room_id) is None:
                 raise NotInRoom(f"User id={user_id} is not in any room")
+            room = self.get_room(room_id)
             user.room_id = None
             s.commit()
             logger.debug(f"User {user_id=} left {room_id=}")
+            return room
 
     def set_user_name(self, user_id: int, name: str):
         logger.debug(f"Setting user {user_id=} {name=}")

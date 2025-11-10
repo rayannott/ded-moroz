@@ -11,7 +11,7 @@ class LeaveCallback(Callback):
     def process(self, message: types.Message, user: User):
         logger.info(f"/leave from {user}")
         try:
-            self.moroz.leave_room(user)
+            left_room = self.moroz.leave_room(user)
         except NotInRoom:
             self.bot.send_message(
                 message.chat.id,
@@ -24,11 +24,11 @@ class LeaveCallback(Callback):
             "You have successfully left the room! 🎉",
         )
 
-        # self._notify_manager(user, joined_room)
+        self._notify_manager(user, left_room)
 
-    # def _notify_manager(self, user: User, room: Room):
-    #     logger.info(f"Notifying manager about {user} joining {room}")
-    #     self.bot.send_message(
-    #         room.manager_user_id,
-    #         f"User {user.display_name} (@{user.username}) has joined your room {room.display_short_code}",
-    #     )
+    def _notify_manager(self, user: User, room: Room):
+        logger.debug(f"Notifying manager about {user} leaving {room}")
+        self.bot.send_message(
+            room.manager_user_id,
+            f"User {user.display_name} (@{user.username}) has left your room {room.display_short_code}",
+        )
