@@ -8,6 +8,7 @@ from sqlmodel import SQLModel
 
 from src.models.room import Room
 from src.models.user import User
+from src.models.target import Target
 from src.shared.exceptions import (
     NotInRoom,
     RoomNotFound,
@@ -46,7 +47,7 @@ class DatabaseRepository:
             f"Adding target in room {room_id=} for user {user_id=} to target {target_user_id=}"
         )
         with self.session() as s:
-            target_orm = TargetORM(
+            target_orm = Target(
                 room_id=room_id,
                 user_id=user_id,
                 target_user_id=target_user_id,
@@ -59,10 +60,10 @@ class DatabaseRepository:
         logger.debug(f"Getting target in room {room_id=} for user {user_id=}")
         with self.session() as s:
             target_orm = (
-                s.query(TargetORM)
+                s.query(Target)
                 .filter(
-                    TargetORM.room_id == room_id,
-                    TargetORM.user_id == user_id,
+                    Target.room_id == room_id,
+                    Target.user_id == user_id,
                 )
                 .first()
             )
@@ -75,7 +76,7 @@ class DatabaseRepository:
     def get_room_by_short_code(self, short_code: int) -> Room:
         logger.debug(f"Getting room by {short_code=}")
         with self.session() as s:
-            room_orms = s.query(RoomORM).filter(RoomORM.short_code == short_code).all()
+            room_orms = s.query(Room).filter(Room.short_code == short_code).all()
         if not room_orms:
             raise RoomNotFound(f"Room {short_code=} not found")
         if len(room_orms) > 1:
@@ -106,7 +107,7 @@ class DatabaseRepository:
     def get_room(self, room_id: str) -> Room:
         logger.debug(f"Getting room {room_id=}")
         with self.session() as s:
-            room_orm = s.get(RoomORM, room_id)
+            room_orm = s.get(Room, room_id)
         if room_orm is None:
             raise RoomNotFound(f"Room {room_id=} not found")
         logger.debug(f"Got {room_orm}")
@@ -127,9 +128,7 @@ class DatabaseRepository:
         _ = self.get_user(user_id=user_id)  # raises if not found
 
         with self.session() as s:
-            room_orms = (
-                s.query(RoomORM).filter(RoomORM.manager_user_id == user_id).all()
-            )
+            room_orms = s.query(Room).filter(Room.manager_user_id == user_id).all()
         logger.debug(f"Got rooms managed by user {user_id=}: {room_orms}")
         return [Room.model_validate(room_orm) for room_orm in room_orms]
 
@@ -147,7 +146,7 @@ class DatabaseRepository:
         _ = self.get_room(room_id=room_id)  # raises if not found
 
         with self.session() as s:
-            user_orms = s.query(UserORM).filter(UserORM.room_id == room_id).all()
+            user_orms = s.query(User).filter(User.room_id == room_id).all()
         logger.debug(f"Got users in room {room_id=}: {user_orms}")
         return [User.model_validate(user_orm) for user_orm in user_orms]
 
@@ -155,10 +154,10 @@ class DatabaseRepository:
         logger.debug(f"User {user_id=} joining {room_id=}")
         # raises UserNotFound, RoomNotFound
         with self.session() as s:
-            user_orm = s.get(UserORM, user_id)
+            user_orm = s.get(User, user_id)
             if user_orm is None:
                 raise UserNotFound(f"User with id={user_id} not found")
-            room_orm = s.get(RoomORM, room_id)
+            room_orm = s.get(Room, room_id)
             if room_orm is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             user_orm.room_id = room_id
@@ -169,7 +168,7 @@ class DatabaseRepository:
         logger.debug(f"Deleting {room_id=}")
         # raises RoomNotFound
         with self.session() as s:
-            room_orm = s.get(RoomORM, room_id)
+            room_orm = s.get(Room, room_id)
             if room_orm is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             s.delete(room_orm)
@@ -180,7 +179,7 @@ class DatabaseRepository:
         logger.debug(f"User id={user_id} leaving room")
         # raises UserNotFound, NotInRoom
         with self.session() as s:
-            user_orm = s.get(UserORM, user_id)
+            user_orm = s.get(User, user_id)
             if user_orm is None:
                 raise UserNotFound(f"User with id={user_id} not found")
             if (room_id := user_orm.room_id) is None:
@@ -193,7 +192,7 @@ class DatabaseRepository:
         logger.debug(f"Setting user {user_id=} {name=}")
         # raises UserNotFound
         with self.session() as s:
-            user_orm = s.get(UserORM, user_id)
+            user_orm = s.get(User, user_id)
             if user_orm is None:
                 raise UserNotFound(f"User with id={user_id} not found")
             user_orm.name = name
@@ -204,7 +203,7 @@ class DatabaseRepository:
         logger.debug(f"Setting game started dt for room {room_id=} to {started_dt=}")
         # raises RoomNotFound
         with self.session() as s:
-            room_orm = s.get(RoomORM, room_id)
+            room_orm = s.get(Room, room_id)
             if room_orm is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             room_orm.started_at = started_dt
@@ -217,7 +216,7 @@ class DatabaseRepository:
         )
         # raises RoomNotFound
         with self.session() as s:
-            room_orm = s.get(RoomORM, room_id)
+            room_orm = s.get(Room, room_id)
             if room_orm is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             room_orm.completed_dt = completed_dt
