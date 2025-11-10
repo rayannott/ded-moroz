@@ -28,7 +28,7 @@ class CreateCallback(Callback):
             self.bot.send_message(
                 message.chat.id,
                 "You have reached the maximum number of rooms you can create. "
-                "Please /delete an existing room before creating a new one.",
+                "Please /manage and delete an existing room before creating a new one.",
             )
             return
 
