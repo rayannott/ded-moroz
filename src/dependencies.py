@@ -16,7 +16,7 @@ dotenv.load_dotenv()
 class ApplicationContainer(DeclarativeContainer):
     config = Configuration()
     config.from_pydantic(Settings())  # type: ignore
-    config = cast(Settings, config)
+    config = cast(Settings, config)  # type: ignore[assignment]
 
     db_engine = Singleton(create_engine, config.database_url)
 
@@ -26,6 +26,7 @@ class ApplicationContainer(DeclarativeContainer):
         Moroz,
         database_repository=database_repository,
         max_rooms_managed_by_user=config.max_rooms_managed_by_user,
+        min_players_to_start_game=config.min_players_to_start_game,
     )
 
     bot_app = Singleton(BotApp, api_token=config.bot_token, moroz=moroz)

@@ -12,8 +12,6 @@ from src.applications.bot.callbacks.management.manage import ManageCallback
 from src.applications.bot.callbacks.me import MeCallback
 from src.applications.bot.callbacks.name import NameCallback
 from src.applications.bot.callbacks.start import StartCallback
-from src.applications.bot.callbacks.management.manage import ManageCallback
-from src.applications.bot.callbacks.easter import EasterCallback
 from src.services.moroz import Moroz
 
 
@@ -56,10 +54,6 @@ class CallbacksManager:
         @bot.message_handler(commands=["name"])
         def name_handler(message: types.Message):
             NameCallback(self.bot, self.moroz).process_wrap(message)
-
-        @bot.message_handler(commands=["easter"])
-        def easter_handler(message: types.Message):
-            EasterCallback(self.bot, self.moroz).process(message)
 
         @bot.message_handler(func=lambda message: True)
         def echo_handler(message: types.Message):

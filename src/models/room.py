@@ -1,30 +1,34 @@
-from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
-from pydantic_extra_types.pendulum_dt import DateTime
+from pydantic import AwareDatetime
+from sqlmodel import Column, DateTime, Field, Integer, SQLModel
+
+from src.shared.times import utcnow
 
 
-class Room(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+class Room(SQLModel, table=True):
+    id: str = Field(primary_key=True, description="Room ID (hex string)")
+    short_code: int = Field(sa_column=Column(Integer, nullable=False, index=True))
+    name: str = Field(nullable=False)
 
-    id: str
-    name: str
-    manager_user_id: int
-    created_dt: DateTime
-    started_at: DateTime | None = None
-    completed_dt: DateTime | None = None
+    manager_user_id: int = Field(foreign_key="user.id", nullable=False)
+
+    created_dt: AwareDatetime = Field(
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+        default_factory=utcnow,
+    )
+    started_at: Optional[AwareDatetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+    completed_dt: Optional[AwareDatetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
 
     def is_active(self) -> bool:
         return self.completed_dt is None
 
     @property
-    def short_code(self) -> int:
-        """Return a short numeric code for the room for easier sharing."""
-        return int(self.id, 16) % 10_000
-
-    @property
     def display_short_code(self) -> str:
-        """Return a zero-padded short code for display purposes."""
         return f"{self.short_code:04d}"
 
     @property
@@ -34,12 +38,3 @@ class Room(BaseModel):
     @property
     def game_completed(self) -> bool:
         return self.completed_dt is not None
-
-    @field_validator("created_dt", "started_at", "completed_dt", mode="before")
-    @classmethod
-    def convert_std_datetime_to_pendulum(cls, v):
-        if isinstance(v, datetime):
-            return DateTime.fromisoformat(v.isoformat())
-        if v is None:
-            return None
-        return v

@@ -2,6 +2,8 @@ from itertools import batched
 
 from telebot import types
 
+from src.models.user import User
+
 
 def get_keyboard(buttons: list[str]) -> types.ReplyKeyboardMarkup:
     kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
@@ -16,3 +18,11 @@ def remove_keyboard() -> types.ReplyKeyboardRemove:
 
 def text(message: types.Message) -> str:
     return message.text if message.text else ""
+
+
+def user_from_message(message: types.Message) -> User:
+    return User(
+        id=message.from_user.id if message.from_user else 0,
+        name=message.chat.first_name,
+        username=message.chat.username,
+    )
