@@ -1,13 +1,9 @@
-from typing import TYPE_CHECKING, Optional
+from typing import Optional
 
 from pydantic import AwareDatetime
-from sqlmodel import Column, Field, Integer, Relationship, SQLModel
-from sqlmodel import DateTime
+from sqlmodel import Column, DateTime, Field, Integer, SQLModel
 
 from src.shared.times import utcnow
-
-if TYPE_CHECKING:
-    from src.models.user import User
 
 
 class Room(SQLModel, table=True):
@@ -26,17 +22,6 @@ class Room(SQLModel, table=True):
     )
     completed_dt: Optional[AwareDatetime] = Field(
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
-    )
-
-    # relationships
-    manager: Optional["User"] = Relationship(
-        back_populates="managed_rooms",
-        sa_relationship_kwargs=dict(foreign_keys="[Room.manager_user_id]"),
-    )
-
-    players: list["User"] = Relationship(
-        back_populates="room",
-        sa_relationship_kwargs=dict(foreign_keys="[User.room_id]"),
     )
 
     def is_active(self) -> bool:

@@ -138,7 +138,7 @@ class DatabaseRepository:
         # raises UserNotFound
         all_rooms = self.get_rooms_managed_by_user(user_id=user_id)
         managed_rooms = [room for room in all_rooms if room.is_active()]
-        logger.debug(f"Get active rooms managed by user {user_id=}: {managed_rooms}")
+        logger.debug(f"Got active rooms managed by user {user_id=}: {managed_rooms}")
         return managed_rooms
 
     def get_users_in_room(self, room_id: str) -> list[User]:
@@ -155,37 +155,37 @@ class DatabaseRepository:
         logger.debug(f"User {user_id=} joining {room_id=}")
         # raises UserNotFound, RoomNotFound
         with self.session() as s:
-            user_orm = s.get(User, user_id)
-            if user_orm is None:
+            user = s.get(User, user_id)
+            if user is None:
                 raise UserNotFound(f"User with id={user_id} not found")
-            room_orm = s.get(Room, room_id)
-            if room_orm is None:
+            room = s.get(Room, room_id)
+            if room is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
-            user_orm.room_id = room_id
+            user.room_id = room_id
             s.commit()
-            logger.debug(f"User {user_orm} joined {room_orm}")
+            logger.debug(f"User {user} joined {room}")
 
     def delete_room(self, room_id: str):
         logger.debug(f"Deleting {room_id=}")
         # raises RoomNotFound
         with self.session() as s:
-            room_orm = s.get(Room, room_id)
-            if room_orm is None:
+            room = s.get(Room, room_id)
+            if room is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
-            s.delete(room_orm)
+            s.delete(room)
             s.commit()
-            logger.debug(f"Deleted {room_orm}")
+            logger.debug(f"Deleted {room}")
 
     def leave_room(self, user_id: int):
         logger.debug(f"User id={user_id} leaving room")
         # raises UserNotFound, NotInRoom
         with self.session() as s:
-            user_orm = s.get(User, user_id)
-            if user_orm is None:
+            user = s.get(User, user_id)
+            if user is None:
                 raise UserNotFound(f"User with id={user_id} not found")
-            if (room_id := user_orm.room_id) is None:
+            if (room_id := user.room_id) is None:
                 raise NotInRoom(f"User id={user_id} is not in any room")
-            user_orm.room_id = None
+            user.room_id = None
             s.commit()
             logger.debug(f"User {user_id=} left {room_id=}")
 
@@ -193,10 +193,10 @@ class DatabaseRepository:
         logger.debug(f"Setting user {user_id=} {name=}")
         # raises UserNotFound
         with self.session() as s:
-            user_orm = s.get(User, user_id)
-            if user_orm is None:
+            user = s.get(User, user_id)
+            if user is None:
                 raise UserNotFound(f"User with id={user_id} not found")
-            user_orm.name = name
+            user.name = name
             s.commit()
             logger.debug(f"Set {user_id=} {name=}")
 
@@ -204,10 +204,10 @@ class DatabaseRepository:
         logger.debug(f"Setting game started dt for room {room_id=} to {started_dt=}")
         # raises RoomNotFound
         with self.session() as s:
-            room_orm = s.get(Room, room_id)
-            if room_orm is None:
+            room = s.get(Room, room_id)
+            if room is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
-            room_orm.started_at = started_dt
+            room.started_at = started_dt
             s.commit()
             logger.debug(f"Set game started dt for room {room_id=} to {started_dt=}")
 
@@ -217,10 +217,10 @@ class DatabaseRepository:
         )
         # raises RoomNotFound
         with self.session() as s:
-            room_orm = s.get(Room, room_id)
-            if room_orm is None:
+            room = s.get(Room, room_id)
+            if room is None:
                 raise RoomNotFound(f"Room with {room_id=} not found")
-            room_orm.completed_dt = completed_dt
+            room.completed_dt = completed_dt
             s.commit()
             logger.debug(
                 f"Set game completed dt for room {room_id=} to {completed_dt=}"
