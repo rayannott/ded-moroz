@@ -14,9 +14,13 @@ def moroz_mock() -> MagicMock:
 
 @pytest.fixture
 def user_mock() -> User:
-    return MagicMock(spec=User)
+    user = MagicMock(spec=User)
+    user.__str__ = MagicMock(return_value="this-user")
+    return user
 
 
 @pytest.fixture
 def room_mock() -> Room:
-    return MagicMock(spec=Room)
+    room = MagicMock(spec=Room)
+    room.__str__ = MagicMock(return_value="this-room")
+    return room
