@@ -6,7 +6,7 @@ from sqlmodel import Column, DateTime, Field, SQLModel
 from src.shared.times import utcnow
 
 
-class User(SQLModel, table=True):
+class User(SQLModel, table=True):  # type: ignore[call-arg]
     id: int = Field(primary_key=True)
     joined_dt: AwareDatetime = Field(
         default_factory=utcnow,

@@ -90,7 +90,7 @@ class TestCallback:
         message = message_factory()
         usr_obj = mock.MagicMock()
         user_from_message_patched.return_value = usr_obj
-        usr_obj.__str__ = mock.MagicMock(return_value="non-existent-user")
+        usr_obj.__str__ = mock.MagicMock(return_value="non-existent-user")  # type: ignore[method-assign]
         moroz_mock.get_user.side_effect = UserNotFound
         # WHEN
         AnyCallback(bot_mock, moroz_mock).process_wrap(message)
