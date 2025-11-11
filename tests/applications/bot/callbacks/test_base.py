@@ -28,7 +28,7 @@ class TestCallback:
         bot_mock,
         moroz_mock,
         caplog: LogCaptureFixture,  # noqa: F811
-    ):  # noqa: F811
+    ):
         # GIVEN
         message = message_factory()
         message.from_user = None

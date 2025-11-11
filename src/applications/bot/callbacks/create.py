@@ -9,11 +9,9 @@ from src.shared.exceptions import MaxNumberOfRoomsReached
 class CreateCallback(Callback):
     def process(self, message: types.Message, user: User):
         logger.info(f"/create from {user}")
-        this_user = self.moroz.get_user(user)
-
         try:
             room = self.moroz.create_room(
-                created_by_user_id=this_user.id,
+                created_by_user_id=user.id,
                 room_name="New Room",
             )
         except MaxNumberOfRoomsReached:
