@@ -1,0 +1,73 @@
+import pytest
+from pytest import LogCaptureFixture
+from pytest_loguru.plugin import caplog  # noqa: F401
+
+from src.applications.bot.callbacks.create import CreateCallback
+from src.models.user import User
+from src.repositories.database import DatabaseRepository
+from src.shared.exceptions import UserNotFound
+
+
+class TestCreateCallbackIntegration:
+    @pytest.fixture
+    def callback(self, bot_mock, moroz_integrated) -> CreateCallback:
+        return CreateCallback(bot=bot_mock, moroz=moroz_integrated)
+
+    def test_create_room_user_not_found(
+        self,
+        callback: CreateCallback,
+        message_factory,
+        caplog: LogCaptureFixture,  # noqa: F811
+        user_mock: User,
+    ):
+        # GIVEN
+        user_mock.id = 123456
+        message = message_factory(text="/create")
+        # WHEN / THEN
+        with pytest.raises(UserNotFound):
+            callback.process(message, user_mock)
+
+    def test_create_room_success(
+        self,
+        callback: CreateCallback,
+        message_factory,
+        user_mock: User,
+        database_repo: DatabaseRepository,
+        bot_mock,
+        caplog: LogCaptureFixture,  # noqa: F811
+    ):
+        # GIVEN
+        database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
+        message = message_factory(text="/create")
+        # WHEN
+        callback.process(message, user_mock)
+        # THEN
+        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        assert len(managed_rooms) == 1
+        bot_mock.send_message.assert_called_once()
+
+    def test_create_room_max_reached(
+        self,
+        callback: CreateCallback,
+        message_factory,
+        user_mock: User,
+        database_repo: DatabaseRepository,
+        bot_mock,
+        caplog: LogCaptureFixture,  # noqa: F811
+    ):
+        # GIVEN (assume max rooms per user is 2)
+        database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
+        message = message_factory(text="/create")
+
+        # WHEN / THEN
+        callback.process(message, user_mock)
+        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        assert len(managed_rooms) == 1
+
+        callback.process(message, user_mock)
+        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        assert len(managed_rooms) == 2
+
+        callback.process(message, user_mock)
+        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        assert len(managed_rooms) == 2
