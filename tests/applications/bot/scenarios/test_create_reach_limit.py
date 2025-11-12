@@ -1,5 +1,6 @@
 import re
 from unittest import mock
+
 import pytest
 from pytest import LogCaptureFixture
 from pytest_loguru.plugin import caplog  # noqa: F401
@@ -63,7 +64,7 @@ class TestCreateReachLimit:
         database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
         message = message_factory(text="/create")
         _on_not_created_log_part = (
-            "Maximum number of rooms reached: user created_by_user_id=123456"
+            "Maximum number of rooms reached: user created_by_user_id=12345"
         )
 
         # WHEN / THEN

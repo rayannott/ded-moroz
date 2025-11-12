@@ -2,14 +2,14 @@ from loguru import logger
 from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
-from src.models.user import User
-from src.models.room import Room
 from src.applications.bot.utils import text
+from src.models.room import Room
+from src.models.user import User
 from src.shared.exceptions import (
-    RoomNotFound,
     AlreadyInRoom,
-    GameAlreadyStarted,
     GameAlreadyCompleted,
+    GameAlreadyStarted,
+    RoomNotFound,
 )
 
 
@@ -19,7 +19,7 @@ class JoinCallback(Callback):
             room = self.moroz.get_room(user.room_id)
             self.bot.send_message(
                 message.chat.id,
-                f"You have already joined some room {room.display_short_code}. Please /leave it first.",
+                f"You have already joined the room {room.display_short_code}. Please /leave it first.",
             )
             return
 

@@ -18,7 +18,27 @@ def user_mock() -> User:
     user.__str__ = MagicMock(return_value="this-user")  # type: ignore[method-assign]
     user.name = "Test"
     user.username = "testuser"
-    user.id = 123456
+    user.id = 12345
+    return user
+
+
+@pytest.fixture
+def real_user_factory():
+    def _factory(
+        id: int = 13579, username: str = "realuser", name: str = "Real"
+    ) -> User:
+        return User(id=id, username=username, name=name)
+
+    return _factory
+
+
+@pytest.fixture
+def another_user_mock() -> User:
+    user = MagicMock(spec=User)
+    user.__str__ = MagicMock(return_value="another-user")  # type: ignore[method-assign]
+    user.name = "Another"
+    user.username = "anotheruser"
+    user.id = 654321
     return user
 
 

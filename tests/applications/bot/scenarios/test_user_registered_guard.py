@@ -58,10 +58,12 @@ class TestRejectNonRegistered:
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
-        database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
+        created_user = database_repo.create_user(
+            user_mock.id, user_mock.username, user_mock.name
+        )
         message = message_factory()
-        user_from_message_patched.return_value = user_mock
+        user_from_message_patched.return_value = created_user
         # WHEN
         callback.process_wrap(message)
         # THEN
-        assert "AnyCallback from User(id=123456; @testuser, Test): Hello" in caplog.text
+        assert "AnyCallback from User(id=12345; @testuser, Test): Hello" in caplog.text
