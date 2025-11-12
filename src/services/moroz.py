@@ -42,12 +42,15 @@ class Moroz:
             )
         )
         if len(active_managed_rooms) >= self.max_rooms_managed_by_user:
-            raise MaxNumberOfRoomsReached(
-                f"User {created_by_user_id} already manages "
+            msg = (
+                "Maximum number of rooms reached: "
+                f"user {created_by_user_id=} already manages "
                 f"{len(active_managed_rooms)} rooms, "
                 f"the maximum allowed number is "
                 f"{self.max_rooms_managed_by_user}"
             )
+            logger.info(msg)
+            raise MaxNumberOfRoomsReached(msg)
         room = self.database_repository.create_room(
             created_by_user_id=created_by_user_id,
             room_name=room_name,
@@ -84,12 +87,18 @@ class Moroz:
         logger.info(f"User {user} joining {room_short_code=}")
         user = self.database_repository.get_user(user.id)
         if user.room_id is not None:
-            raise AlreadyInRoom(f"User {user.id=} is already in room id={user.room_id}")
+            msg = f"User {user.id=} is already in room id={user.room_id}"
+            logger.info(msg)
+            raise AlreadyInRoom(msg)
         room = self.database_repository.get_room_by_short_code(room_short_code)
         if room.game_started:
-            raise GameAlreadyStarted(f"Game in room {room.id} has already started")
+            msg = f"Game in room {room.id} has already started"
+            logger.info(msg)
+            raise GameAlreadyStarted(msg)
         if room.game_completed:
-            raise GameAlreadyCompleted(f"Game in room {room.id} has already completed")
+            msg = f"Game in room {room.id} has already completed"
+            logger.info(msg)
+            raise GameAlreadyCompleted(msg)
         self.database_repository.join_room(
             user_id=user.id,
             room_id=room.id,
@@ -101,10 +110,12 @@ class Moroz:
         logger.info(f"Starting game in room {room}")
         users_in_room = self.database_repository.get_users_in_room(room.id)
         if len(users_in_room) < self.min_players_to_start_game:
-            raise RoomTooSmall(
+            msg = (
                 f"Cannot start game in room {room.id=} with "
                 f"only {len(users_in_room)} users; minimum is {self.min_players_to_start_game}"
             )
+            logger.info(msg)
+            raise RoomTooSmall(msg)
         logger.info(f"Game started in {room} with users {users_in_room}")
         random.shuffle(users_in_room)
         target_pairs: list[tuple[User, User]] = [

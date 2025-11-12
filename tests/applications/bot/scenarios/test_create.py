@@ -45,6 +45,7 @@ class TestCreateCallbackIntegration:
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 1
         bot_mock.send_message.assert_called_once()
+        assert "Room created" in caplog.text
 
     def test_create_room_max_reached(
         self,
@@ -55,9 +56,12 @@ class TestCreateCallbackIntegration:
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
-        # GIVEN (assume max rooms per user is 2)
+        # GIVEN (max rooms per user is 2)
         database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
         message = message_factory(text="/create")
+        _on_not_created_log_part = (
+            "Maximum number of rooms reached: user created_by_user_id=123456"
+        )
 
         # WHEN / THEN
         callback.process(message, user_mock)
@@ -67,7 +71,10 @@ class TestCreateCallbackIntegration:
         callback.process(message, user_mock)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
+        assert "Room created" in caplog.text
+        assert _on_not_created_log_part not in caplog.text
 
         callback.process(message, user_mock)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
+        assert _on_not_created_log_part in caplog.text
