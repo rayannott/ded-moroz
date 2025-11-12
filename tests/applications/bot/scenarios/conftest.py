@@ -11,6 +11,7 @@ def database_repo():
     engine = create_engine("sqlite:///:memory:", echo=False)
     repo = DatabaseRepository(engine)
     yield repo
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")
