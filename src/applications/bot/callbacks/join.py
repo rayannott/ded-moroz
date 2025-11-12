@@ -5,12 +5,7 @@ from src.applications.bot.callbacks.base import Callback
 from src.applications.bot.utils import text
 from src.models.room import Room
 from src.models.user import User
-from src.shared.exceptions import (
-    AlreadyInRoom,
-    GameAlreadyCompleted,
-    GameAlreadyStarted,
-    RoomNotFound,
-)
+from src.shared.exceptions import GameAlreadyCompleted, GameAlreadyStarted, RoomNotFound
 
 
 class JoinCallback(Callback):
@@ -61,15 +56,6 @@ class JoinCallback(Callback):
             self.bot.send_message(
                 message.chat.id,
                 f"Room with ID {room_short_code_str} not found.",
-            )
-            return
-        except AlreadyInRoom:
-            logger.critical(
-                "AlreadyInRoom raised when joining room; should not have reached here"
-            )
-            self.bot.send_message(
-                message.chat.id,
-                "You have already joined some room. Please /leave it first.",
             )
             return
         except GameAlreadyStarted:

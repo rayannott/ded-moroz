@@ -1,15 +1,14 @@
 from typing import Optional
 
 from pydantic import AwareDatetime
+from pydantic_extra_types.pendulum_dt import DateTime as Dt
 from sqlmodel import Column, DateTime, Field, SQLModel
-
-from src.shared.times import utcnow
 
 
 class User(SQLModel, table=True):  # type: ignore[call-arg]
     id: int = Field(primary_key=True)
     joined_dt: AwareDatetime = Field(
-        default_factory=utcnow,
+        default_factory=Dt.utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     name: Optional[str] = Field(default=None)
