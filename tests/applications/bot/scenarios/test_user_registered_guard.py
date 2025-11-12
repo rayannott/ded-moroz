@@ -7,6 +7,7 @@ from pytest_loguru.plugin import caplog  # noqa: F401
 from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
 from src.repositories.database import DatabaseRepository
+from tests.utils import Regex
 
 
 class AnyCallback(Callback):
@@ -33,6 +34,7 @@ class TestCallbackIntegration:
         message_factory,
         user_mock: User,
         user_from_message_patched,
+        bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
@@ -41,6 +43,10 @@ class TestCallbackIntegration:
         # WHEN / THEN
         callback.process_wrap(message)
         assert "is not registered." in caplog.text
+        bot_mock.send_message.assert_called_once_with(
+            message.chat.id,
+            Regex(r".+not registered.+"),
+        )
 
     def test_user_exists(
         self,
