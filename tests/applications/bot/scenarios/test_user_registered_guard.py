@@ -15,7 +15,7 @@ class AnyCallback(Callback):
         pass
 
 
-class TestCallbackIntegration:
+class TestRejectNonRegistered:
     @pytest.fixture(scope="function")
     def user_from_message_patched(self, user_mock):
         with mock.patch(

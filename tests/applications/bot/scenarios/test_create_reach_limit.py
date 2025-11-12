@@ -7,11 +7,21 @@ from pytest_loguru.plugin import caplog  # noqa: F401
 from src.applications.bot.callbacks.create import CreateCallback
 from src.models.user import User
 from src.repositories.database import DatabaseRepository
-from src.shared.exceptions import UserNotFound
 from tests.utils import Regex
 
 
-class TestCreateCallbackIntegration:
+class TestCreateReachLimit:
+    """Test creating rooms until reaching the maximum limit.
+
+    Given:
+    - a registered user
+    When:
+    - the user creates rooms repeatedly
+    Then:
+    - rooms are created successfully until the maximum limit is reached
+    - appropriate messages are sent to the user
+    """
+
     @pytest.fixture
     def callback(self, bot_mock, moroz_integrated) -> CreateCallback:
         return CreateCallback(bot=bot_mock, moroz=moroz_integrated)
