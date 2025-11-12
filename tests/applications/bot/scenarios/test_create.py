@@ -60,12 +60,13 @@ class TestCreateCallbackIntegration:
         callback.process(message, user_mock)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 1
+        assert _on_not_created_log_part not in caplog.text
 
         callback.process(message, user_mock)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
-        assert "Room created" in caplog.text
         assert _on_not_created_log_part not in caplog.text
+        assert "Room created" in caplog.text
 
         callback.process(message, user_mock)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
