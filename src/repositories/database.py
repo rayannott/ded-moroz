@@ -16,7 +16,6 @@ from src.shared.exceptions import (
     UserAlreadyExists,
     UserNotFound,
 )
-from src.shared.times import utcnow
 
 
 class DatabaseRepository:
@@ -93,7 +92,7 @@ class DatabaseRepository:
                 id=id,
                 username=username,
                 name=name,
-                joined_dt=utcnow(),
+                joined_dt=DateTime.utcnow(),
             )
 
             s.add(user)

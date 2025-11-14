@@ -1,15 +1,14 @@
 from typing import Optional
 
 from pydantic import AwareDatetime
+from pydantic_extra_types.pendulum_dt import DateTime as Dt
 from sqlmodel import Column, DateTime, Field, SQLModel
 
-from src.shared.times import utcnow
 
-
-class User(SQLModel, table=True):
+class User(SQLModel, table=True):  # type: ignore[call-arg]
     id: int = Field(primary_key=True)
     joined_dt: AwareDatetime = Field(
-        default_factory=utcnow,
+        default_factory=Dt.utcnow,
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
     name: Optional[str] = Field(default=None)
@@ -24,3 +23,11 @@ class User(SQLModel, table=True):
     @property
     def display_name(self) -> str:
         return self.name or self.username or "Unknown"
+
+    @property
+    def formal_display_name(self) -> str:
+        return (
+            f"{self.display_name} (@{self.username})"
+            if self.username
+            else self.display_name
+        )

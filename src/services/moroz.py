@@ -1,6 +1,6 @@
 import random
-from itertools import pairwise
 from dataclasses import dataclass
+from itertools import pairwise
 
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
@@ -12,10 +12,12 @@ from src.shared.exceptions import (
     AlreadyInRoom,
     GameAlreadyCompleted,
     GameAlreadyStarted,
+    InvalidName,
     MaxNumberOfRoomsReached,
     RoomTooSmall,
     TargetNotAssigned,
 )
+from src.shared.utils import is_name_valid
 
 
 @dataclass
@@ -42,12 +44,15 @@ class Moroz:
             )
         )
         if len(active_managed_rooms) >= self.max_rooms_managed_by_user:
-            raise MaxNumberOfRoomsReached(
-                f"User {created_by_user_id} already manages "
+            msg = (
+                "Maximum number of rooms reached: "
+                f"user {created_by_user_id=} already manages "
                 f"{len(active_managed_rooms)} rooms, "
                 f"the maximum allowed number is "
                 f"{self.max_rooms_managed_by_user}"
             )
+            logger.info(msg)
+            raise MaxNumberOfRoomsReached(msg)
         room = self.database_repository.create_room(
             created_by_user_id=created_by_user_id,
             room_name=room_name,
@@ -84,12 +89,18 @@ class Moroz:
         logger.info(f"User {user} joining {room_short_code=}")
         user = self.database_repository.get_user(user.id)
         if user.room_id is not None:
-            raise AlreadyInRoom(f"User {user.id=} is already in room id={user.room_id}")
+            msg = f"User {user.id=} is already in room id={user.room_id}"
+            logger.info(msg)
+            raise AlreadyInRoom(msg)
         room = self.database_repository.get_room_by_short_code(room_short_code)
         if room.game_started:
-            raise GameAlreadyStarted(f"Game in room {room.id} has already started")
+            msg = f"Game in room {room.id} has already started"
+            logger.info(msg)
+            raise GameAlreadyStarted(msg)
         if room.game_completed:
-            raise GameAlreadyCompleted(f"Game in room {room.id} has already completed")
+            msg = f"Game in room {room.id} has already completed"
+            logger.info(msg)
+            raise GameAlreadyCompleted(msg)
         self.database_repository.join_room(
             user_id=user.id,
             room_id=room.id,
@@ -101,10 +112,12 @@ class Moroz:
         logger.info(f"Starting game in room {room}")
         users_in_room = self.database_repository.get_users_in_room(room.id)
         if len(users_in_room) < self.min_players_to_start_game:
-            raise RoomTooSmall(
+            msg = (
                 f"Cannot start game in room {room.id=} with "
                 f"only {len(users_in_room)} users; minimum is {self.min_players_to_start_game}"
             )
+            logger.info(msg)
+            raise RoomTooSmall(msg)
         logger.info(f"Game started in {room} with users {users_in_room}")
         random.shuffle(users_in_room)
         target_pairs: list[tuple[User, User]] = [
@@ -148,6 +161,30 @@ class Moroz:
         logger.success(f"Created {new_user}")
         return new_user
 
+    def get_room_information(self, room: Room) -> str:
+        logger.info(f"Getting information about {room}")
+        this_room = self.database_repository.get_room(room.id)
+        msg = f"Room {this_room.display_short_code} ({this_room.name})\n"
+        manager = self.database_repository.get_user(this_room.manager_user_id)
+        msg += f"Managed by {manager.formal_display_name}"
+        msg += f"\nCreated at {this_room.created_dt}"
+        users_in_room = self.database_repository.get_users_in_room(this_room.id)
+        msg += "\nParticipants:\n  "
+        msg += (
+            "\n".join(usr.formal_display_name for usr in users_in_room)
+            or "No participants yet"
+        )
+        if this_room.game_started:
+            msg += f"\nGame started at {this_room.started_dt}"
+            if this_room.game_completed:
+                msg += f"\nGame completed at {this_room.completed_dt}"
+            else:
+                msg += "\nGame is ongoing..."
+        else:
+            msg += "\nGame has not started yet"
+        logger.success(f"Got information about {this_room}.")
+        return msg
+
     def get_user_information(self, user: User) -> str:
         logger.info(f"Getting information about {user}")
         this_user = self.database_repository.get_user(user.id)
@@ -181,6 +218,10 @@ class Moroz:
 
     def update_name(self, user: User, name: str):
         logger.info(f"Updating {user} name to {name}")
+        status = is_name_valid(name)
+        if not status:
+            logger.info(f"Invalid name {name!r} provided by {user}: {status.reason}")
+            raise InvalidName(status.reason)
         self.database_repository.set_user_name(user.id, name)
         logger.success(f"Updated {user} name to {name}")
 
