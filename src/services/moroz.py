@@ -1,6 +1,6 @@
 import random
-from itertools import pairwise
 from dataclasses import dataclass
+from itertools import pairwise
 
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
@@ -12,10 +12,12 @@ from src.shared.exceptions import (
     AlreadyInRoom,
     GameAlreadyCompleted,
     GameAlreadyStarted,
+    InvalidName,
     MaxNumberOfRoomsReached,
     RoomTooSmall,
     TargetNotAssigned,
 )
+from src.shared.utils import is_name_valid
 
 
 @dataclass
@@ -159,6 +161,30 @@ class Moroz:
         logger.success(f"Created {new_user}")
         return new_user
 
+    def get_room_information(self, room: Room) -> str:
+        logger.info(f"Getting information about {room}")
+        this_room = self.database_repository.get_room(room.id)
+        msg = f"Room {this_room.display_short_code} ({this_room.name})\n"
+        manager = self.database_repository.get_user(this_room.manager_user_id)
+        msg += f"Managed by {manager.formal_display_name}"
+        msg += f"\nCreated at {this_room.created_dt}"
+        users_in_room = self.database_repository.get_users_in_room(this_room.id)
+        msg += "\nParticipants:\n  "
+        msg += (
+            "\n".join(usr.formal_display_name for usr in users_in_room)
+            or "No participants yet"
+        )
+        if this_room.game_started:
+            msg += f"\nGame started at {this_room.started_dt}"
+            if this_room.game_completed:
+                msg += f"\nGame completed at {this_room.completed_dt}"
+            else:
+                msg += "\nGame is ongoing..."
+        else:
+            msg += "\nGame has not started yet"
+        logger.success(f"Got information about {this_room}.")
+        return msg
+
     def get_user_information(self, user: User) -> str:
         logger.info(f"Getting information about {user}")
         this_user = self.database_repository.get_user(user.id)
@@ -192,6 +218,10 @@ class Moroz:
 
     def update_name(self, user: User, name: str):
         logger.info(f"Updating {user} name to {name}")
+        status = is_name_valid(name)
+        if not status:
+            logger.info(f"Invalid name {name!r} provided by {user}: {status.reason}")
+            raise InvalidName(status.reason)
         self.database_repository.set_user_name(user.id, name)
         logger.success(f"Updated {user} name to {name}")
 

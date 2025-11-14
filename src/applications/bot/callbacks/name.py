@@ -4,6 +4,7 @@ from telebot import types
 from src.applications.bot.callbacks.base import Callback
 from src.applications.bot.utils import text
 from src.models.user import User
+from src.shared.exceptions import InvalidName
 
 
 class NameCallback(Callback):
@@ -23,7 +24,14 @@ class NameCallback(Callback):
         new_name = text(message).strip()
         logger.debug(f"Setting name for {user} to {new_name!r}")
 
-        self.moroz.update_name(user, new_name)
+        try:
+            self.moroz.update_name(user, new_name)
+        except InvalidName as e:
+            self.bot.send_message(
+                user.id,
+                f"Invalid name: {e}. Please try again with a different name.",
+            )
+            return
 
         self.bot.send_message(
             user.id,

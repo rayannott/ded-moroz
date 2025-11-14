@@ -26,6 +26,7 @@ class CreateCallback(Callback):
             user.id,
             rf"""Room created successfully\! 🎉
 This room ID: `{room.display_short_code}` \(share this with your friends\)\.
-Note that you are not automatically joined to the room; please /join to enter\.""",
+Note that you are not automatically joined to the room; please /join to enter\.
+Use /manage to view info, manage, or delete your rooms\.""",
             parse_mode="MarkdownV2",
         )

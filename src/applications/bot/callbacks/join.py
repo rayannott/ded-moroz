@@ -82,5 +82,5 @@ class JoinCallback(Callback):
         logger.info(f"Notifying manager about {user} joining {room}")
         self.bot.send_message(
             room.manager_user_id,
-            f"User {user.display_name} (@{user.username}) has joined your room {room.display_short_code}",
+            f"User {user.formal_display_name} has joined your room {room.display_short_code}",
         )

@@ -30,5 +30,5 @@ class LeaveCallback(Callback):
         logger.debug(f"Notifying manager about {user} leaving {room}")
         self.bot.send_message(
             room.manager_user_id,
-            f"User {user.display_name} (@{user.username}) has left your room {room.display_short_code}",
+            f"User {user.formal_display_name} has left your room {room.display_short_code}",
         )

@@ -62,7 +62,8 @@ class TestRoomDeletedNotifyMembers:
             (
                 mock.call(
                     member.id,
-                    Regex(r"The room.+has been deleted by its manager.+"),
+                    f"The room {room.display_short_code} you were in has been deleted "
+                    "by its manager Manager (@manager). You have been removed from the room.",
                 )
                 for member in (member1, member2)
             )

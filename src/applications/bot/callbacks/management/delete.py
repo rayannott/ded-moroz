@@ -21,18 +21,19 @@ class DeleteCallback(ManagementCallback):
 
         self._notify_ex_members(room, user, users_in_just_deleted_room)
 
-    def _notify_one_user(self, user: User, ex_room: Room):
+    def _notify_one_user(self, user: User, manager_user: User, ex_room: Room):
         logger.debug(f"Notifying user {user} about {ex_room} deletion")
         self.bot.send_message(
             user.id,
-            f"The room {ex_room.display_short_code} you were in has been deleted by its manager. You have been removed from the room.",
+            f"The room {ex_room.display_short_code} you were in has been deleted by its manager {manager_user.formal_display_name}. "
+            "You have been removed from the room.",
         )
 
     def _notify_ex_members(
         self,
         room: Room,
-        user: User,
+        manager_user: User,
         users_in_room: list[User],
     ):
         for user in users_in_room:
-            self._notify_one_user(user, room)
+            self._notify_one_user(user, manager_user, room)

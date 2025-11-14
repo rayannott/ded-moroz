@@ -1,3 +1,9 @@
+import pytest
+
+from src.applications.bot.callbacks.management.play import PlayCallback
+from src.repositories.database import DatabaseRepository
+
+
 class TestStartGameInRoom:
     """Start the game.
 
@@ -11,5 +17,17 @@ class TestStartGameInRoom:
     - the room's state is updated to reflect that the game has started
     """
 
-    # TODO(test): possibly also test when RoomTooSmall
-    pass
+    # TODO(test): also test when RoomTooSmall
+
+    @pytest.fixture
+    def start_game_callback(self, bot_mock, moroz_integrated) -> PlayCallback:
+        return PlayCallback(bot=bot_mock, moroz=moroz_integrated)
+
+    def test_start_game(
+        self,
+        start_game_callback: PlayCallback,
+        message_factory,
+        database_repo: DatabaseRepository,
+        bot_mock,
+    ):
+        pass

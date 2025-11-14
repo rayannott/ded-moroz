@@ -4,6 +4,7 @@ from telebot import types
 from src.applications.bot.callbacks.base import Callback
 from src.applications.bot.callbacks.management.complete import CompleteCallback
 from src.applications.bot.callbacks.management.delete import DeleteCallback
+from src.applications.bot.callbacks.management.info import InfoCallback
 from src.applications.bot.callbacks.management.kick import KickCallback
 from src.applications.bot.callbacks.management.play import PlayCallback
 from src.applications.bot.utils import get_keyboard, remove_keyboard, text
@@ -11,6 +12,7 @@ from src.models.room import Room
 from src.models.user import User
 
 _CANCEL_ACTION = "cancel"
+_INFO_ACTION = "about room"
 _COMPLETE_ACTION = "complete"
 _DELETE_ACTION = "delete room"
 _KICK_PLAYER_ACTION = "kick player"
@@ -34,8 +36,7 @@ class ManageCallback(Callback):
         elif room.game_started:
             actions.extend([_COMPLETE_ACTION])
         # no actions if completed
-
-        actions.append(_CANCEL_ACTION)
+        actions.extend((_INFO_ACTION, _CANCEL_ACTION))
         return actions
 
     def process(self, user: User, *, message: types.Message):
@@ -130,6 +131,10 @@ class ManageCallback(Callback):
                 reply_markup=remove_keyboard(),
             )
             logger.debug(f"Room management cancelled by {user}")
+        elif chosen_text == _INFO_ACTION:
+            InfoCallback(bot=self.bot, moroz=self.moroz).process_management(
+                room=room, user=user
+            )
         elif chosen_text == _DELETE_ACTION:
             DeleteCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user

@@ -23,3 +23,11 @@ class User(SQLModel, table=True):  # type: ignore[call-arg]
     @property
     def display_name(self) -> str:
         return self.name or self.username or "Unknown"
+
+    @property
+    def formal_display_name(self) -> str:
+        return (
+            f"{self.display_name} (@{self.username})"
+            if self.username
+            else self.display_name
+        )

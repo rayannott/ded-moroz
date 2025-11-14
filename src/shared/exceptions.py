@@ -62,3 +62,9 @@ class TargetNotAssigned(AppError):
     """Raised when a target could not be assigned to a player."""
 
     pass
+
+
+class InvalidName(AppError):
+    """Raised when a provided name is invalid."""
+
+    pass
