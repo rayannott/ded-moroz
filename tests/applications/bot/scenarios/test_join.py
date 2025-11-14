@@ -59,7 +59,7 @@ class TestJoinRoom:
         message = message_factory(text="/join")
 
         # WHEN (user initiates join)
-        join_callback.process(message, this_user)
+        join_callback.process(this_user, message=message)
 
         # THEN
         _, (_answer, callback_fn), _kwargs = (
@@ -101,7 +101,7 @@ class TestJoinRoom:
         message = message_factory(text="/join")
 
         # WHEN (user initiates join)
-        join_callback.process(message, this_user)
+        join_callback.process(this_user, message=message)
 
         # THEN
         _, (_answer, callback_fn), _kwargs = (
@@ -136,7 +136,7 @@ class TestJoinRoom:
         message = message_factory(text="/join")
 
         # WHEN (user initiates join)
-        join_callback.process(message, this_user)
+        join_callback.process(this_user, message=message)
 
         # THEN
         _, (_answer, callback_fn), _kwargs = (

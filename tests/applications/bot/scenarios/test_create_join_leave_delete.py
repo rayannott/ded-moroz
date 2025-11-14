@@ -71,7 +71,7 @@ class TestCreateJoinLeaveDelete:
         )
 
         # WHEN Create
-        create_callback.process(create_message, user_mock)
+        create_callback.process(user_mock, message=create_message)
 
         # THEN Create
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
@@ -79,7 +79,7 @@ class TestCreateJoinLeaveDelete:
         assert len(managed_rooms) == 1
         created_room: Room = managed_rooms[0]
         bot_mock.send_message.assert_called_once_with(
-            create_message.chat.id,
+            user_mock.id,
             Regex(r"Room created.+ID: `\d{4}`.+", flags=re.DOTALL),
             parse_mode="MarkdownV2",
         )
@@ -88,14 +88,14 @@ class TestCreateJoinLeaveDelete:
         # WHEN Join (initiated)
         join_message = message_factory(text="/join")
         this_user = database_repo.get_user(user_mock.id)
-        join_callback.process(join_message, this_user)
+        join_callback.process(this_user, message=join_message)
 
         # THEN Join
         _, (_answer, callback_fn), _kwargs = (
             bot_mock.register_next_step_handler.mock_calls[0]
         )
         initiated_join_call = mock.call(
-            join_message.chat.id,
+            user_mock.id,
             Regex("Please enter.+"),
         )
         assert callback_fn == join_callback._handle_room_code_entered
@@ -118,7 +118,7 @@ class TestCreateJoinLeaveDelete:
         # WHEN Leave
         leave_message = message_factory(text="/leave")
         this_user = database_repo.get_user(user_mock.id)
-        leave_callback.process(leave_message, this_user)
+        leave_callback.process(this_user, message=leave_message)
 
         # THEN Leave
         successful_leave_call = mock.call(

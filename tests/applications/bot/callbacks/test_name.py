@@ -17,20 +17,22 @@ class TestNameCallback:
     ):
         # GIVEN
         message = message_factory(text="/name")
+        answer_message = message_factory(text="some name")
         user_mock.__str__.return_value = "this-usr"
+        bot_mock.send_message.return_value = answer_message
         cb = NameCallback(bot_mock, moroz_mock)
 
         # WHEN
-        cb.process(message, user_mock)
+        cb.process(user_mock, message=message)
 
         # THEN
         assert "/name from this-usr" in caplog.text
         bot_mock.send_message.assert_called_once_with(
-            message.chat.id,
+            user_mock.id,
             "Please provide the name you want to use.",
         )
         bot_mock.register_next_step_handler.assert_called_once_with(
-            message,
+            answer_message,
             cb._set_name,
             user=user_mock,
         )
@@ -58,7 +60,7 @@ class TestNameCallback:
         text_mock.assert_called_once_with(message)
         moroz_mock.update_name.assert_called_once_with(user_mock, "Someone")
         bot_mock.send_message.assert_called_once_with(
-            message.chat.id,
+            user_mock.id,
             "Your name has been set to 'Someone'.",
         )
 

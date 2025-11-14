@@ -40,12 +40,12 @@ class TestCreateReachLimit:
         database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
         message = message_factory(text="/create")
         # WHEN
-        callback.process(message, user_mock)
+        callback.process(user_mock, message=message)
         # THEN
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 1
         bot_mock.send_message.assert_called_once_with(
-            message.chat.id,
+            user_mock.id,
             Regex(r"Room created.+ID: `\d{4}`.+", flags=re.DOTALL),
             parse_mode="MarkdownV2",
         )
@@ -68,18 +68,18 @@ class TestCreateReachLimit:
         )
 
         # WHEN / THEN
-        callback.process(message, user_mock)
+        callback.process(user_mock, message=message)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 1
         assert _on_not_created_log_part not in caplog.text
 
-        callback.process(message, user_mock)
+        callback.process(user_mock, message=message)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
         assert _on_not_created_log_part not in caplog.text
         assert "Room created" in caplog.text
 
-        callback.process(message, user_mock)
+        callback.process(user_mock, message=message)
         managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
         assert _on_not_created_log_part in caplog.text
@@ -87,17 +87,17 @@ class TestCreateReachLimit:
         bot_mock.send_message.assert_has_calls(
             [
                 mock.call(
-                    message.chat.id,
+                    user_mock.id,
                     Regex(r"Room created.+ID: `\d{4}`.+", flags=re.DOTALL),
                     parse_mode="MarkdownV2",
                 ),
                 mock.call(
-                    message.chat.id,
+                    user_mock.id,
                     Regex(r"Room created.+ID: `\d{4}`.+", flags=re.DOTALL),
                     parse_mode="MarkdownV2",
                 ),
                 mock.call(
-                    message.chat.id,
+                    user_mock.id,
                     Regex(
                         r"You have reached the maximum number of rooms you can create.+",
                         flags=re.DOTALL,

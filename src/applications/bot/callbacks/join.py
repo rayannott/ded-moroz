@@ -9,17 +9,17 @@ from src.shared.exceptions import GameAlreadyCompleted, GameAlreadyStarted, Room
 
 
 class JoinCallback(Callback):
-    def process(self, message: types.Message, user: User):
+    def process(self, user: User, *, message: types.Message):
         if user.room_id is not None:
             room = self.moroz.get_room(user.room_id)
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 f"You have already joined the room {room.display_short_code}. Please /leave it first.",
             )
             return
 
         answer = self.bot.send_message(
-            message.chat.id,
+            user.id,
             "Please enter the room ID you want to join:",
         )
         self.bot.register_next_step_handler(
@@ -38,7 +38,7 @@ class JoinCallback(Callback):
             room_short_code = int(chosen_text)
         except ValueError:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "Invalid room ID format. Please enter a numeric room ID.",
             )
             logger.info(f"Invalid room ID format entered by {user}: {chosen_text!r}")
@@ -54,25 +54,25 @@ class JoinCallback(Callback):
             )
         except RoomNotFound:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 f"Room with ID {room_short_code_str} not found.",
             )
             return
         except GameAlreadyStarted:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 f"The game in room {room_short_code_str} has already started. You cannot join now.",
             )
             return
         except GameAlreadyCompleted:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 f"The game in room {room_short_code_str} has already completed. You cannot join now.",
             )
             return
 
         self.bot.send_message(
-            message.chat.id,
+            user.id,
             f"You have successfully joined the room {room_short_code_str}! 🎉",
         )
 

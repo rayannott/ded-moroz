@@ -9,7 +9,7 @@ from src.shared.exceptions import UserNotFound
 
 
 class AnyCallback(Callback):
-    def process(self, message, user):
+    def process(self, user, *, message):
         pass
 
 

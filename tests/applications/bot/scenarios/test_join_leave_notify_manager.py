@@ -53,7 +53,7 @@ class TestJoinLeaveNotifyManager:
 
         # WHEN
         joiner_user = database_repo.get_user(joiner.id)
-        join_callback.process(message, joiner_user)
+        join_callback.process(joiner_user, message=message)
 
         # THEN
         _, (_answer, callback_fn), _kwargs = (
@@ -75,7 +75,7 @@ class TestJoinLeaveNotifyManager:
 
         # WHEN (the joiner leaves the room)
         leave_message = message_factory(text="/leave", chat_id=joiner.id)
-        leave_callback.process(leave_message, joiner_user)
+        leave_callback.process(joiner_user, message=leave_message)
 
         # THEN
         users_in_room = database_repo.get_users_in_room(room.id)

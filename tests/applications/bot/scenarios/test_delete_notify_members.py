@@ -42,11 +42,10 @@ class TestRoomDeletedNotifyMembers:
         )
         database_repo.join_room(user_id=member1.id, room_id=room.id)
         database_repo.join_room(user_id=member2.id, room_id=room.id)
-        message = message_factory(text="/delete", chat_id=manager.id)
 
         # WHEN
         manager = database_repo.get_user(manager.id)
-        delete_callback.process_management(message, manager, room)
+        delete_callback.process_management(manager, room)
 
         # THEN
         with pytest.raises(RoomNotFound):

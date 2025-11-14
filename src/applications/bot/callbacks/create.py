@@ -7,7 +7,7 @@ from src.shared.exceptions import MaxNumberOfRoomsReached
 
 
 class CreateCallback(Callback):
-    def process(self, message: types.Message, user: User):
+    def process(self, user: User, *, message: types.Message):
         logger.info(f"/create from {user}")
         try:
             room = self.moroz.create_room(
@@ -16,14 +16,14 @@ class CreateCallback(Callback):
             )
         except MaxNumberOfRoomsReached:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "You have reached the maximum number of rooms you can create. "
                 "Please /manage and delete an existing room before creating a new one.",
             )
             return
 
         self.bot.send_message(
-            message.chat.id,
+            user.id,
             rf"""Room created successfully\! 🎉
 This room ID: `{room.display_short_code}` \(share this with your friends\)\.
 Note that you are not automatically joined to the room; please /join to enter\.""",

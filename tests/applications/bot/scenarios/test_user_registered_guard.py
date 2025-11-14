@@ -11,7 +11,7 @@ from tests.utils import Regex
 
 
 class AnyCallback(Callback):
-    def process(self, message, user):
+    def process(self, user, *, message):
         pass
 
 

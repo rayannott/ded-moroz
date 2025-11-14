@@ -4,8 +4,8 @@ import pytest
 from pytest_loguru.plugin import caplog  # noqa: F401
 
 from src.applications.bot.callbacks.management.manage import (
-    ManageCallback,
     _CANCEL_ACTION,
+    ManageCallback,
 )
 from src.models.room import Room
 from src.models.user import User
@@ -56,10 +56,10 @@ class TestManagePickOption:
             id=123, username="otheruser", name="Other"
         )
         # WHEN
-        manage_callback.process(message, some_other_user)
+        manage_callback.process(some_other_user, message=message)
         # THEN
         bot_mock.send_message.assert_called_once_with(
-            message.chat.id,
+            some_other_user.id,
             Regex("You are not managing.+"),
         )
 
@@ -75,10 +75,10 @@ class TestManagePickOption:
         manager_user, created_room = create_user_room
         message = message_factory(text="/manage")
         # WHEN
-        manage_callback.process(message, manager_user)
+        manage_callback.process(manager_user, message=message)
         # THEN
         bot_mock.send_message.assert_called_once_with(
-            message.chat.id,
+            manager_user.id,
             "Please select a room to manage:",
             reply_markup=mock.ANY,
         )
@@ -97,7 +97,7 @@ class TestManagePickOption:
         manager_user, created_room = create_user_room
         message = message_factory(text="/manage")
         # WHEN
-        manage_callback.process(message, manager_user)
+        manage_callback.process(manager_user, message=message)
         _, (_answer, callback_fn), _kwargs = (
             bot_mock.register_next_step_handler.mock_calls[0]
         )
@@ -109,7 +109,7 @@ class TestManagePickOption:
         )
         # THEN
         bot_mock.send_message.assert_called_with(
-            answer_message.chat.id,
+            manager_user.id,
             "Room management cancelled.",
             reply_markup=mock.ANY,
         )
@@ -126,7 +126,7 @@ class TestManagePickOption:
         manager_user, created_room = create_user_room
         message = message_factory(text="/manage")
         # WHEN
-        manage_callback.process(message, manager_user)
+        manage_callback.process(manager_user, message=message)
         _, (_answer, callback_fn), _kwargs = (
             bot_mock.register_next_step_handler.mock_calls[0]
         )
@@ -138,7 +138,7 @@ class TestManagePickOption:
         )
         # THEN
         bot_mock.send_message.assert_called_with(
-            answer_message.chat.id,
+            manager_user.id,
             "Internal error.",
             reply_markup=mock.ANY,
         )

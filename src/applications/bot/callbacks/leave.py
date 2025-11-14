@@ -8,19 +8,19 @@ from src.shared.exceptions import NotInRoom
 
 
 class LeaveCallback(Callback):
-    def process(self, message: types.Message, user: User):
+    def process(self, user: User, *, message: types.Message):
         logger.info(f"/leave from {user}")
         try:
             left_room = self.moroz.leave_room(user)
         except NotInRoom:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "You are not currently in any room.",
             )
             return
 
         self.bot.send_message(
-            message.chat.id,
+            user.id,
             "You have successfully left the room! 🎉",
         )
 

@@ -44,7 +44,7 @@ class TestJoinWhileInRoom:
 
         # WHEN
         that_user = database_repo.get_user(created_user.id)
-        join_callback.process(message, that_user)
+        join_callback.process(that_user, message=message)
 
         # THEN
         bot_mock.send_message.assert_called_once_with(

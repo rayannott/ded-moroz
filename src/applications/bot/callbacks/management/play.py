@@ -1,23 +1,24 @@
 from loguru import logger
-from telebot import types
 
 from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import remove_keyboard
-from src.shared.exceptions import RoomTooSmall
 from src.models.room import Room
 from src.models.user import User
+from src.shared.exceptions import RoomTooSmall
 
 
 class PlayCallback(ManagementCallback):
-    def process_management(self, message: types.Message, user: User, room: Room):
+    def process_management(self, user: User, room: Room):
         logger.info(f"Play action chosen by {user} in {room}")
 
         try:
             target_pairs = self.moroz.start_game_in_room(room)
         except RoomTooSmall:
-            logger.debug(f"Attempt to start game in too small {room.id=} by user {user}")
+            logger.debug(
+                f"Attempt to start game in too small {room.id=} by user {user}"
+            )
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "Cannot start the game: not enough players in the room (need at least 2).",
                 reply_markup=remove_keyboard(),
             )
@@ -27,7 +28,7 @@ class PlayCallback(ManagementCallback):
                 f"Error starting game in {room.id=} by user {user}"
             )
             self.bot.send_message(
-                message.chat.id, "Internal error.", reply_markup=remove_keyboard()
+                user.id, "Internal error.", reply_markup=remove_keyboard()
             )
             return
 
@@ -42,7 +43,7 @@ class PlayCallback(ManagementCallback):
             f"{u.display_name} (@{u.username})" for u, _ in target_pairs
         )
         self.bot.send_message(
-            message.chat.id,
+            user.id,
             f"The game in room {room.display_short_code} has started! All participants ({participants}) have been notified privately.",
             reply_markup=remove_keyboard(),
         )

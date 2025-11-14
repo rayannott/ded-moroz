@@ -1,5 +1,4 @@
 from loguru import logger
-from telebot import types
 
 from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import remove_keyboard
@@ -8,13 +7,13 @@ from src.models.user import User
 
 
 class DeleteCallback(ManagementCallback):
-    def process_management(self, message: types.Message, user: User, room: Room):
+    def process_management(self, user: User, room: Room):
         logger.info(f"Delete action chosen by {user} in {room}")
         users_in_just_deleted_room = self.moroz.delete_room(
             room_id=room.id,
         )
         self.bot.send_message(
-            message.chat.id,
+            user.id,
             f"Room {room.display_short_code} ({len(users_in_just_deleted_room)} players) deleted successfully. 🎉",
             reply_markup=remove_keyboard(),
         )

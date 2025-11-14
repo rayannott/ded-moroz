@@ -1,9 +1,8 @@
-from telebot import types
 from loguru import logger
+from telebot import types
 
 from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
-
 
 HELP_MESSAGE = """Available commands:
 /start
@@ -18,9 +17,9 @@ HELP_MESSAGE = """Available commands:
 
 
 class HelpCallback(Callback):
-    def process(self, message: types.Message, user: User):
+    def process(self, user: User, *, message: types.Message):
         logger.info(f"/help from {user}")
         self.bot.send_message(
-            message.chat.id,
+            user.id,
             HELP_MESSAGE,
         )

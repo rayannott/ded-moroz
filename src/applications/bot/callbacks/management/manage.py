@@ -38,14 +38,14 @@ class ManageCallback(Callback):
         actions.append(_CANCEL_ACTION)
         return actions
 
-    def process(self, message: types.Message, user: User):
+    def process(self, user: User, *, message: types.Message):
         logger.info(f"/manage from {user}")
 
         managed_rooms = self.moroz.get_active_rooms_managed_by_user(user)
 
         if not managed_rooms:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "You are not managing any active rooms currently.",
             )
             return
@@ -53,7 +53,7 @@ class ManageCallback(Callback):
         code_to_room = {room.short_code: room for room in managed_rooms}
 
         answer = self.bot.send_message(
-            message.chat.id,
+            user.id,
             "Please select a room to manage:",
             reply_markup=get_keyboard(
                 [f"{room.display_short_code}" for room in managed_rooms]
@@ -76,7 +76,7 @@ class ManageCallback(Callback):
         chosen_text = text(message)
         if chosen_text == _CANCEL_ACTION:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "Room management cancelled.",
                 reply_markup=remove_keyboard(),
             )
@@ -89,14 +89,14 @@ class ManageCallback(Callback):
         if room is None:
             logger.critical(f"Room {room_short_code=} not found; {user=}")
             self.bot.send_message(
-                message.chat.id, "Internal error.", reply_markup=remove_keyboard()
+                user.id, "Internal error.", reply_markup=remove_keyboard()
             )
             return
 
         actions_kb = get_keyboard(self.get_available_actions(room))
 
         answer = self.bot.send_message(
-            message.chat.id,
+            user.id,
             f"You are managing room {room.display_short_code}. Please choose an action:",
             reply_markup=actions_kb,
         )
@@ -118,38 +118,38 @@ class ManageCallback(Callback):
         if chosen_text not in self.get_available_actions(room):
             logger.debug(f"Invalid action chosen: {chosen_text} by {user}")
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "Invalid action selected. (How did you do that, huh?)",
                 reply_markup=remove_keyboard(),
             )
             return
         if chosen_text == _CANCEL_ACTION:
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "Room management cancelled.",
                 reply_markup=remove_keyboard(),
             )
             logger.debug(f"Room management cancelled by {user}")
         elif chosen_text == _DELETE_ACTION:
             DeleteCallback(bot=self.bot, moroz=self.moroz).process_management(
-                message=message, room=room, user=user
+                room=room, user=user
             )
         elif chosen_text == _KICK_PLAYER_ACTION:
             KickCallback(bot=self.bot, moroz=self.moroz).process_management(
-                message=message, room=room, user=user
+                room=room, user=user
             )
         elif chosen_text == _START_GAME_ACTION:
             PlayCallback(bot=self.bot, moroz=self.moroz).process_management(
-                message=message, room=room, user=user
+                room=room, user=user
             )
         elif chosen_text == _COMPLETE_ACTION:
             CompleteCallback(bot=self.bot, moroz=self.moroz).process_management(
-                message=message, room=room, user=user
+                room=room, user=user
             )
         else:
             logger.debug(f"Unknown action chosen: {chosen_text} by {user}")
             self.bot.send_message(
-                message.chat.id,
+                user.id,
                 "Unknown action selected.",
                 reply_markup=remove_keyboard(),
             )

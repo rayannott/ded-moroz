@@ -4,10 +4,10 @@ import telebot
 from loguru import logger
 from telebot import types
 
+from src.applications.bot.utils import user_from_message
 from src.models.user import User
 from src.services.moroz import Moroz
 from src.shared.exceptions import UserNotFound
-from src.applications.bot.utils import user_from_message
 
 
 class Callback(ABC):
@@ -30,7 +30,7 @@ class Callback(ABC):
         try:
             user_actual = self.moroz.get_user(usr)
             logger.info(f"{self.__class__.__name__} from {user_actual}: {message.text}")
-            return self.process(message, user=user_actual)
+            return self.process(user_actual, message=message)
         except UserNotFound:
             self.bot.send_message(
                 message.chat.id,
@@ -40,4 +40,4 @@ class Callback(ABC):
             return
 
     @abstractmethod
-    def process(self, message: types.Message, user: User): ...
+    def process(self, user: User, *, message: types.Message): ...

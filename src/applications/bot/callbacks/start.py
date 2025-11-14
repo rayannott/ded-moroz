@@ -11,23 +11,23 @@ class StartCallback(Callback):
     def process_wrap(self, message: types.Message):
         # overriding to NOT check user existence beforehand
         # since the point of /start is to create user if not exists
-        return self.process(message, user_from_message(message))
+        return self.process(user_from_message(message), message=message)
 
-    def _create_user(self, user: User, message: types.Message):
+    def _create_user(self, user: User):
         new_user = self.moroz.create_user(user)
         self.bot.send_message(
-            message.chat.id,
+            new_user.id,
             f"Welcome, {new_user.display_name}! You have been registered.",
         )
 
     def _greet_again(self, user: User):
         self.bot.send_message(user.id, f"Welcome back, {user.display_name}!")
 
-    def process(self, message: types.Message, user: User):
+    def process(self, user: User, *, message: types.Message):
         logger.info(f"/start from {user}")
 
         try:
             this_user = self.moroz.get_user(user)
             self._greet_again(this_user)
         except UserNotFound:
-            self._create_user(user, message)
+            self._create_user(user)
