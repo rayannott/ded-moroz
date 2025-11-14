@@ -5,22 +5,13 @@ from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import remove_keyboard
 from src.models.room import Room
 from src.models.user import User
-from src.shared.exceptions import RoomNotFound
 
 
 class CompleteCallback(ManagementCallback):
     def process_management(self, message: types.Message, user: User, room: Room):
         logger.info(f"Complete action chosen by {user} in {room}")
-        try:
-            users_in_just_completed_room = self.moroz.complete_game_in_room(room)
-        except RoomNotFound:
-            logger.opt(exception=True).error(
-                f"Error completing game in {room.id=} by user {user}"
-            )
-            self.bot.send_message(
-                message.chat.id, "Internal error.", reply_markup=remove_keyboard()
-            )
-            return
+        users_in_just_completed_room = self.moroz.complete_game_in_room(room)
+
         self.bot.send_message(
             message.chat.id,
             f"The game in room {room.display_short_code} has been completed successfully. 🎉",

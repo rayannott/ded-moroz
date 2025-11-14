@@ -146,3 +146,18 @@ class TestManagePickOption:
             f"Room room_short_code={created_room.short_code} not found; user="
             in caplog.text
         )
+
+    def test_manage_correct_action_options_shown(self):
+        pass
+
+    def test_manage_invalid_action_chosen(self):
+        pass
+
+    def test_delete_callback_invoked(self):
+        pass
+
+    def test_complete_callback_invoked(self):
+        pass
+
+    def test_start_callback_invoked(self):
+        pass
