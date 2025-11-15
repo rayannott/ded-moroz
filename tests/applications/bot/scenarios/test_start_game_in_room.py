@@ -15,6 +15,7 @@ class TestStartGameInRoom:
     Then:
     - messages are sent to all room members with their targets
     - the room's state is updated to reflect that the game has started
+    - (quick sanity check) each user's name is mentioned once as a target and once as a seeker in the logs
     """
 
     # TODO(test): also test when RoomTooSmall

@@ -22,8 +22,6 @@ from tests.utils import Regex
 class TestManagePickOption:
     """Manager manages the room."""
 
-    # TODO(test): given the state of the room,
-    # the manager should have a certain set of options to pick from
     @pytest.fixture
     def manage_callback(self, bot_mock, moroz_integrated) -> ManageCallback:
         return ManageCallback(bot=bot_mock, moroz=moroz_integrated)
@@ -251,14 +249,25 @@ class TestManagePickOption:
             reply_markup=kb_mock,
         )
 
-    def test_manage_invalid_action_chosen(self):
-        pass
-
-    def test_delete_callback_invoked(self):
-        pass
-
-    def test_complete_callback_invoked(self):
-        pass
-
-    def test_start_callback_invoked(self):
-        pass
+    def test_manage_invalid_action_chosen(
+        self,
+        manage_callback: ManageCallback,
+        message_factory,
+        create_user_room: tuple[User, Room],
+        bot_mock,
+    ):
+        # GIVEN
+        manager_user, created_room = create_user_room
+        action_chosen_message = message_factory(text="Some invalid action")
+        # WHEN
+        manage_callback._handle_action_chosen(
+            action_chosen_message,
+            user=manager_user,
+            room=created_room,
+        )
+        # THEN
+        bot_mock.send_message.assert_called_once_with(
+            manager_user.id,
+            Regex("Invalid action selected.+"),
+            reply_markup=mock.ANY,
+        )
