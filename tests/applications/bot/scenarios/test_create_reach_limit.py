@@ -42,7 +42,7 @@ class TestCreateReachLimit:
         # WHEN
         callback.process(user_mock, message=message)
         # THEN
-        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        managed_rooms = database_repo.get_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 1
         bot_mock.send_message.assert_called_once_with(
             user_mock.id,
@@ -69,18 +69,18 @@ class TestCreateReachLimit:
 
         # WHEN / THEN
         callback.process(user_mock, message=message)
-        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        managed_rooms = database_repo.get_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 1
         assert _on_not_created_log_part not in caplog.text
 
         callback.process(user_mock, message=message)
-        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        managed_rooms = database_repo.get_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
         assert _on_not_created_log_part not in caplog.text
         assert "Room created" in caplog.text
 
         callback.process(user_mock, message=message)
-        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        managed_rooms = database_repo.get_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms) == 2
         assert _on_not_created_log_part in caplog.text
 

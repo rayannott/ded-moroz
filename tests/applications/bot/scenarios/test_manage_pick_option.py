@@ -1,10 +1,16 @@
 from unittest import mock
 
 import pytest
+from pydantic_extra_types.pendulum_dt import DateTime
 from pytest_loguru.plugin import caplog  # noqa: F401
 
 from src.applications.bot.callbacks.management.manage import (
     _CANCEL_ACTION,
+    _COMPLETE_ACTION,
+    _DELETE_ACTION,
+    _INFO_ACTION,
+    _KICK_PLAYER_ACTION,
+    _START_GAME_ACTION,
     ManageCallback,
 )
 from src.models.room import Room
@@ -61,6 +67,32 @@ class TestManagePickOption:
         bot_mock.send_message.assert_called_once_with(
             some_other_user.id,
             Regex("You are not managing.+"),
+        )
+
+    def test_manage_no_active_rooms_suggest_history(
+        self,
+        manage_callback: ManageCallback,
+        database_repo: DatabaseRepository,
+        message_factory,
+        bot_mock,
+    ):
+        # GIVEN
+        manager_user = database_repo.create_user(
+            id=201, username="manager", name="Manager"
+        )
+        # create a finished room
+        past_room = database_repo.create_room(
+            created_by_user_id=manager_user.id, room_name="Past Room"
+        )
+        database_repo.set_game_started(past_room.id, DateTime.utcnow().add(minutes=10))
+        database_repo.set_game_completed(past_room.id, DateTime.utcnow().add(days=4))
+        message = message_factory(text="/manage")
+        # WHEN
+        manage_callback.process(manager_user, message=message)
+        # THEN
+        bot_mock.send_message.assert_called_once_with(
+            manager_user.id,
+            "You are not managing any active rooms currently. However, you have managed 1 rooms in the past. Use /history to see them.",
         )
 
     def test_manage_manager_initiates_manage_has_room(
@@ -147,8 +179,77 @@ class TestManagePickOption:
             in caplog.text
         )
 
-    def test_manage_correct_action_options_shown(self):
-        pass
+    def test_manage_correct_action_options_new_room(
+        self,
+        manage_callback: ManageCallback,
+        message_factory,
+        create_user_room: tuple[User, Room],
+        get_keyboard_patch,
+        bot_mock,
+    ):
+        # GIVEN (a new room and its manager)
+        manager_user, created_room = create_user_room
+        room_chosen_message = message_factory(text=created_room.display_short_code)
+        kb_mock = mock.MagicMock()
+        get_keyboard_patch.return_value = kb_mock
+        # WHEN
+        manage_callback._handle_room_chosen(
+            room_chosen_message,
+            user=manager_user,
+            code_to_room={created_room.short_code: created_room},
+        )
+        # THEN
+        get_keyboard_patch.assert_called_once_with(
+            [
+                _DELETE_ACTION,
+                _START_GAME_ACTION,
+                _KICK_PLAYER_ACTION,
+                _INFO_ACTION,
+                _CANCEL_ACTION,
+            ]
+        )
+        bot_mock.send_message.assert_called_with(
+            manager_user.id,
+            f"You are managing room {created_room.display_short_code}. Please choose an action:",
+            reply_markup=kb_mock,
+        )
+
+    def test_manage_correct_action_options_in_progress_room(
+        self,
+        manage_callback: ManageCallback,
+        message_factory,
+        create_user_room: tuple[User, Room],
+        database_repo: DatabaseRepository,
+        get_keyboard_patch,
+        bot_mock,
+    ):
+        # GIVEN (a room in progress and its manager)
+        manager_user, created_room = create_user_room
+        # game started:
+        database_repo.set_game_started(created_room.id, DateTime.utcnow())
+        room_chosen_message = message_factory(text=created_room.display_short_code)
+        kb_mock = mock.MagicMock()
+        get_keyboard_patch.return_value = kb_mock
+        # WHEN
+        this_room = database_repo.get_room(created_room.id)
+        manage_callback._handle_room_chosen(
+            room_chosen_message,
+            user=manager_user,
+            code_to_room={created_room.short_code: this_room},
+        )
+        # THEN
+        get_keyboard_patch.assert_called_once_with(
+            [
+                _COMPLETE_ACTION,
+                _INFO_ACTION,
+                _CANCEL_ACTION,
+            ]
+        )
+        bot_mock.send_message.assert_called_with(
+            manager_user.id,
+            f"You are managing room {created_room.display_short_code}. Please choose an action:",
+            reply_markup=kb_mock,
+        )
 
     def test_manage_invalid_action_chosen(self):
         pass

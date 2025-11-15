@@ -129,14 +129,6 @@ class DatabaseRepository:
         logger.debug(f"Got rooms managed by user {user_id=}: {rooms}")
         return rooms
 
-    def get_active_rooms_managed_by_user(self, user_id: int) -> list[Room]:
-        logger.debug(f"Getting active rooms managed by user {user_id=}")
-        # raises UserNotFound
-        all_rooms = self.get_rooms_managed_by_user(user_id=user_id)
-        managed_rooms = [room for room in all_rooms if room.is_active()]
-        logger.debug(f"Got active rooms managed by user {user_id=}: {managed_rooms}")
-        return managed_rooms
-
     def get_users_in_room(self, room_id: str) -> list[User]:
         logger.debug(f"Getting users in room {room_id=}")
         # raises RoomNotFound

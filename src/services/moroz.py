@@ -38,11 +38,10 @@ class Moroz:
             `UserNotFound` if the user does not exist
         """
         logger.info(f"Creating room {room_name!r} by {created_by_user_id=}")
-        active_managed_rooms = (
-            self.database_repository.get_active_rooms_managed_by_user(
-                user_id=created_by_user_id
-            )
+        managed_rooms = self.database_repository.get_rooms_managed_by_user(
+            user_id=created_by_user_id
         )
+        active_managed_rooms = [room for room in managed_rooms if room.is_active()]
         if len(active_managed_rooms) >= self.max_rooms_managed_by_user:
             msg = (
                 "Maximum number of rooms reached: "
@@ -147,9 +146,9 @@ class Moroz:
         logger.success(f"Game completed in room {room}")
         return users_in_room
 
-    def get_active_rooms_managed_by_user(self, user: User) -> list[Room]:
-        logger.info(f"Getting active rooms managed by {user}")
-        return self.database_repository.get_active_rooms_managed_by_user(user.id)
+    def get_rooms_managed_by_user(self, user: User) -> list[Room]:
+        logger.info(f"Getting rooms managed by {user}")
+        return self.database_repository.get_rooms_managed_by_user(user.id)
 
     def create_user(self, user: User) -> User:
         logger.info(f"Creating {user}")

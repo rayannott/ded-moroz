@@ -35,6 +35,8 @@ class ManageCallback(Callback):
         # can only complete if started and not completed
         elif room.game_started:
             actions.extend([_COMPLETE_ACTION])
+        else:
+            logger.error("Should not be possible to manage a completed room")
         # no actions if completed
         actions.extend((_INFO_ACTION, _CANCEL_ACTION))
         return actions
@@ -42,22 +44,28 @@ class ManageCallback(Callback):
     def process(self, user: User, *, message: types.Message):
         logger.info(f"/manage from {user}")
 
-        managed_rooms = self.moroz.get_active_rooms_managed_by_user(user)
+        managed_rooms = self.moroz.get_rooms_managed_by_user(user)
+        active_managed_rooms = [room for room in managed_rooms if room.is_active()]
 
-        if not managed_rooms:
+        if not active_managed_rooms:
+            past_games_info = (
+                f" However, you have managed {len(managed_rooms)} rooms in the past. Use /history to see them."
+                if managed_rooms
+                else ""
+            )
             self.bot.send_message(
                 user.id,
-                "You are not managing any active rooms currently.",
+                f"You are not managing any active rooms currently.{past_games_info}",
             )
             return
 
-        code_to_room = {room.short_code: room for room in managed_rooms}
+        code_to_room = {room.short_code: room for room in active_managed_rooms}
 
         answer = self.bot.send_message(
             user.id,
             "Please select a room to manage:",
             reply_markup=get_keyboard(
-                [f"{room.display_short_code}" for room in managed_rooms]
+                [f"{room.display_short_code}" for room in active_managed_rooms]
                 + [_CANCEL_ACTION]
             ),
         )

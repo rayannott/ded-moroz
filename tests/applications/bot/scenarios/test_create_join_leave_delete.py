@@ -66,15 +66,13 @@ class TestCreateJoinLeaveDelete:
         # GIVEN
         database_repo.create_user(user_mock.id, user_mock.username, user_mock.name)
         create_message = message_factory(text="/create")
-        managed_rooms_init = database_repo.get_active_rooms_managed_by_user(
-            user_mock.id
-        )
+        managed_rooms_init = database_repo.get_rooms_managed_by_user(user_mock.id)
 
         # WHEN Create
         create_callback.process(user_mock, message=create_message)
 
         # THEN Create
-        managed_rooms = database_repo.get_active_rooms_managed_by_user(user_mock.id)
+        managed_rooms = database_repo.get_rooms_managed_by_user(user_mock.id)
         assert len(managed_rooms_init) == 0
         assert len(managed_rooms) == 1
         created_room: Room = managed_rooms[0]
