@@ -73,7 +73,7 @@ class TestCallback:
         # WHEN
         AnyCallback(bot_mock, moroz_mock).process_wrap(message)
         # THEN
-        moroz_mock.get_user.assert_called_once_with(usr_obj)
+        moroz_mock.get_user.assert_called_once_with(usr_obj.id)
         user_from_message_patched.assert_called_once_with(message)
         assert "AnyCallback from this-user: hullo" in caplog.text
 

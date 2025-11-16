@@ -28,7 +28,7 @@ class Callback(ABC):
         usr = user_from_message(message)
 
         try:
-            user_actual = self.moroz.get_user(usr)
+            user_actual = self.moroz.get_user(usr.id)
             logger.info(f"{self.__class__.__name__} from {user_actual}: {message.text}")
             return self.process(user_actual, message=message)
         except UserNotFound:
