@@ -13,12 +13,13 @@ class StartCallback(Callback):
         # since the point of /start is to create user if not exists
         return self.process(user_from_message(message), message=message)
 
-    def _create_user(self, user: User):
+    def _create_user(self, user: User) -> User:
         new_user = self.moroz.create_user(user)
         self.bot.send_message(
             new_user.id,
             f"Welcome, {new_user.display_name}! You have been registered.",
         )
+        return new_user
 
     def _greet_again(self, user: User):
         self.bot.send_message(user.id, f"Welcome back, {user.display_name}!")
@@ -30,4 +31,11 @@ class StartCallback(Callback):
             this_user = self.moroz.get_user(user)
             self._greet_again(this_user)
         except UserNotFound:
-            self._create_user(user)
+            this_user = self._create_user(user)
+
+        assert message.from_user is not None
+        self._update_locale(this_user, message.from_user.language_code or "en")
+
+    def _update_locale(self, user: User, locale_code: str):
+        # TODO(locale): implement actual locale updating
+        pass

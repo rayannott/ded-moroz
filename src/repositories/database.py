@@ -223,3 +223,8 @@ class DatabaseRepository:
             logger.debug(
                 f"Set game completed_dt for room {room_id=} to {completed_dt=}"
             )
+
+    def set_locale(self, user_id: int, locale_code: str) -> bool:
+        logger.debug(f"Setting locale for user {user_id=} to {locale_code=}")
+        # TODO(locale): implement actual locale setting
+        return True  # if actually changed

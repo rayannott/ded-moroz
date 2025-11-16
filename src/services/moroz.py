@@ -244,3 +244,8 @@ class Moroz:
         left_room = self.database_repository.leave_room(user.id)
         logger.success(f"User {user} left their room")
         return left_room
+
+    def set_locale(self, user_id: int, locale_code: str):
+        logger.info(f"Setting locale for user {user_id=} to {locale_code=}")
+        self.database_repository.set_locale(user_id, locale_code)
+        logger.success(f"Set locale for user {user_id=} to {locale_code=}")
