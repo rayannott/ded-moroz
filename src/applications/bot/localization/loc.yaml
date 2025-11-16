@@ -1,0 +1,8 @@
+base:
+  not-registered-yet:
+    en: You are not registered yet. Please /start to register.
+start:
+  welcome:
+    en: Welcome, {display_name}! You have been registered.
+  welcome-back:
+    en: Welcome back, {display_name}!
