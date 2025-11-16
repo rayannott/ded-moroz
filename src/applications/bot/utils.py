@@ -5,10 +5,10 @@ from telebot import types
 from src.models.user import User
 
 
-def get_keyboard(buttons: list[str]) -> types.ReplyKeyboardMarkup:
-    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
-    for zones_batch in batched(buttons, 2):
-        kb.add(*map(types.KeyboardButton, zones_batch), row_width=1)
+def get_keyboard(buttons: list[str], *, row_width=1) -> types.ReplyKeyboardMarkup:
+    kb = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=row_width)
+    for zones_batch in batched(buttons, row_width):
+        kb.add(*map(types.KeyboardButton, zones_batch), row_width=row_width)
     return kb
 
 

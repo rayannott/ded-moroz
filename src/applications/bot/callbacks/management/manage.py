@@ -1,6 +1,7 @@
+from enum import StrEnum
+
 from loguru import logger
 from telebot import types
-from enum import StrEnum
 
 from src.applications.bot.callbacks.base import Callback
 from src.applications.bot.callbacks.management.complete import CompleteCallback
@@ -105,7 +106,7 @@ class ManageCallback(Callback):
             )
             return
 
-        actions_kb = get_keyboard(self.get_available_actions(room))
+        actions_kb = get_keyboard(self.get_available_actions(room), row_width=2)
 
         answer = self.bot.send_message(
             user.id,

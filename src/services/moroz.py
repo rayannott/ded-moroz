@@ -198,7 +198,7 @@ class Moroz:
             f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
         )
         that_room_manager = self.database_repository.get_user(room.manager_user_id)
-        msg += f" managed by {that_room_manager.display_name}"
+        msg += f" managed by {that_room_manager.formal_display_name}"
         # TODO show number of participants
         try:
             target = self.database_repository.get_target(

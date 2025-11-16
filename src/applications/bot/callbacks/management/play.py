@@ -12,7 +12,7 @@ class PlayCallback(ManagementCallback):
         logger.info(f"Play action chosen by {user} in {room}")
 
         try:
-            target_pairs = self.moroz.start_game_in_room(room)
+            target_pairs = self.moroz.start_game_in_room(room.id)
         except RoomTooSmall:
             logger.debug(
                 f"Attempt to start game in too small {room.id=} by user {user}"
