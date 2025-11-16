@@ -23,25 +23,16 @@ class PlayCallback(ManagementCallback):
                 reply_markup=remove_keyboard(),
             )
             return
-        except Exception:
-            logger.opt(exception=True).error(
-                f"Error starting game in {room.id=} by user {user}"
-            )
-            self.bot.send_message(
-                user.id, "Internal error.", reply_markup=remove_keyboard()
-            )
-            return
 
         for giver, receiver in target_pairs:
             logger.debug(f"Notifying {giver} about their target {receiver}")
             self.bot.send_message(
                 giver.id,
-                f"The game in room {room.display_short_code} has started! You are to give a gift to {receiver.display_name} 🎁",
+                f"The game in room {room.display_short_code} has started! "
+                f"You are to give a gift to {receiver.formal_display_name} 🎁",
             )
 
-        participants = ", ".join(
-            f"{u.display_name} (@{u.username})" for u, _ in target_pairs
-        )
+        participants = ", ".join(u.formal_display_name for u, _ in target_pairs)
         self.bot.send_message(
             user.id,
             f"The game in room {room.display_short_code} has started! All participants ({participants}) have been notified privately.",

@@ -212,6 +212,12 @@ class Moroz:
             msg += f"\nYour target is {target.display_name} (assigned when game started at {started_at})"
         except TargetNotAssigned:
             msg += "\nGame has not started yet; no target assigned"
+        # TODO: management history (currently managed rooms and past rooms)
+
+        # TODO: past games:
+        # TODO this_user's past targets
+        # TODO users who had this_user as target
+
         logger.success(f"Got information about {this_user}.")
         return msg
 

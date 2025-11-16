@@ -199,7 +199,8 @@ class TestManagePickOption:
                 ManageActions.KICK_PLAYER.value,
                 ManageActions.INFO.value,
                 ManageActions.CANCEL.value,
-            ]
+            ],
+            row_width=2,
         )
         bot_mock.send_message.assert_called_with(
             manager_user.id,
@@ -236,7 +237,8 @@ class TestManagePickOption:
                 ManageActions.COMPLETE.value,
                 ManageActions.INFO.value,
                 ManageActions.CANCEL.value,
-            ]
+            ],
+            row_width=2,
         )
         bot_mock.send_message.assert_called_with(
             manager_user.id,
