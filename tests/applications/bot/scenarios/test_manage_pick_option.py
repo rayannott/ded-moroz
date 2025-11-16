@@ -5,12 +5,7 @@ from pydantic_extra_types.pendulum_dt import DateTime
 from pytest_loguru.plugin import caplog  # noqa: F401
 
 from src.applications.bot.callbacks.management.manage import (
-    _CANCEL_ACTION,
-    _COMPLETE_ACTION,
-    _DELETE_ACTION,
-    _INFO_ACTION,
-    _KICK_PLAYER_ACTION,
-    _START_GAME_ACTION,
+    ManageActions,
     ManageCallback,
 )
 from src.models.room import Room
@@ -113,7 +108,7 @@ class TestManagePickOption:
             reply_markup=mock.ANY,
         )
         get_keyboard_patch.assert_called_once_with(
-            [created_room.display_short_code, _CANCEL_ACTION]
+            [created_room.display_short_code, ManageActions.CANCEL.value]
         )
 
     def test_manage_manager_cancels(
@@ -131,7 +126,7 @@ class TestManagePickOption:
         _, (_answer, callback_fn), _kwargs = (
             bot_mock.register_next_step_handler.mock_calls[0]
         )
-        answer_message = message_factory(text=_CANCEL_ACTION)
+        answer_message = message_factory(text=ManageActions.CANCEL.value)
         callback_fn(
             answer_message,
             user=manager_user,
@@ -199,11 +194,11 @@ class TestManagePickOption:
         # THEN
         get_keyboard_patch.assert_called_once_with(
             [
-                _DELETE_ACTION,
-                _START_GAME_ACTION,
-                _KICK_PLAYER_ACTION,
-                _INFO_ACTION,
-                _CANCEL_ACTION,
+                ManageActions.DELETE.value,
+                ManageActions.START.value,
+                ManageActions.KICK_PLAYER.value,
+                ManageActions.INFO.value,
+                ManageActions.CANCEL.value,
             ]
         )
         bot_mock.send_message.assert_called_with(
@@ -238,9 +233,9 @@ class TestManagePickOption:
         # THEN
         get_keyboard_patch.assert_called_once_with(
             [
-                _COMPLETE_ACTION,
-                _INFO_ACTION,
-                _CANCEL_ACTION,
+                ManageActions.COMPLETE.value,
+                ManageActions.INFO.value,
+                ManageActions.CANCEL.value,
             ]
         )
         bot_mock.send_message.assert_called_with(

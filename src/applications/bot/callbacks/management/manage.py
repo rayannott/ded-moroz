@@ -1,5 +1,6 @@
 from loguru import logger
 from telebot import types
+from enum import StrEnum
 
 from src.applications.bot.callbacks.base import Callback
 from src.applications.bot.callbacks.management.complete import CompleteCallback
@@ -11,12 +12,14 @@ from src.applications.bot.utils import get_keyboard, remove_keyboard, text
 from src.models.room import Room
 from src.models.user import User
 
-_CANCEL_ACTION = "cancel"
-_INFO_ACTION = "about room"
-_COMPLETE_ACTION = "complete"
-_DELETE_ACTION = "delete room"
-_KICK_PLAYER_ACTION = "kick player"
-_START_GAME_ACTION = "start game"
+
+class ManageActions(StrEnum):
+    CANCEL = "cancel"
+    INFO = "about room"
+    COMPLETE = "complete"
+    DELETE = "delete room"
+    KICK_PLAYER = "kick player"
+    START = "start game"
 
 
 class ManageCallback(Callback):
@@ -27,18 +30,18 @@ class ManageCallback(Callback):
         if not room.game_started and not room.game_completed:
             actions.extend(
                 [
-                    _DELETE_ACTION,
-                    _START_GAME_ACTION,
-                    _KICK_PLAYER_ACTION,
+                    ManageActions.DELETE.value,
+                    ManageActions.START.value,
+                    ManageActions.KICK_PLAYER.value,
                 ]
             )
         # can only complete if started and not completed
         elif room.game_started:
-            actions.extend([_COMPLETE_ACTION])
+            actions.extend([ManageActions.COMPLETE.value])
         else:
             logger.error("Should not be possible to manage a completed room")
         # no actions if completed
-        actions.extend((_INFO_ACTION, _CANCEL_ACTION))
+        actions.extend([ManageActions.INFO.value, ManageActions.CANCEL.value])
         return actions
 
     def process(self, user: User, *, message: types.Message):
@@ -66,7 +69,7 @@ class ManageCallback(Callback):
             "Please select a room to manage:",
             reply_markup=get_keyboard(
                 [f"{room.display_short_code}" for room in active_managed_rooms]
-                + [_CANCEL_ACTION]
+                + [ManageActions.CANCEL.value]
             ),
         )
         self.bot.register_next_step_handler(
@@ -83,7 +86,7 @@ class ManageCallback(Callback):
         code_to_room: dict[int, Room],
     ):
         chosen_text = text(message)
-        if chosen_text == _CANCEL_ACTION:
+        if chosen_text == ManageActions.CANCEL.value:
             self.bot.send_message(
                 user.id,
                 "Room management cancelled.",
@@ -132,30 +135,30 @@ class ManageCallback(Callback):
                 reply_markup=remove_keyboard(),
             )
             return
-        if chosen_text == _CANCEL_ACTION:
+        if chosen_text == ManageActions.CANCEL.value:
             self.bot.send_message(
                 user.id,
                 "Room management cancelled.",
                 reply_markup=remove_keyboard(),
             )
             logger.debug(f"Room management cancelled by {user}")
-        elif chosen_text == _INFO_ACTION:
+        elif chosen_text == ManageActions.INFO.value:
             InfoCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user
             )
-        elif chosen_text == _DELETE_ACTION:
+        elif chosen_text == ManageActions.DELETE.value:
             DeleteCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user
             )
-        elif chosen_text == _KICK_PLAYER_ACTION:
+        elif chosen_text == ManageActions.KICK_PLAYER.value:
             KickCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user
             )
-        elif chosen_text == _START_GAME_ACTION:
+        elif chosen_text == ManageActions.START.value:
             PlayCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user
             )
-        elif chosen_text == _COMPLETE_ACTION:
+        elif chosen_text == ManageActions.COMPLETE.value:
             CompleteCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user
             )
