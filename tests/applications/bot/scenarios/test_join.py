@@ -33,9 +33,9 @@ class TestJoinRoom:
         return JoinCallback(bot=bot_mock, moroz=moroz_integrated)
 
     @pytest.fixture
-    def create_user_room(self, database_repo: DatabaseRepository, user_mock: User):
+    def create_user_room(self, database_repo: DatabaseRepository):
         created_user = database_repo.create_user(
-            user_mock.id, user_mock.username, user_mock.name
+            id=401, username="manager", name="Manager"
         )
         created_room = database_repo.create_room(
             created_by_user_id=created_user.id,
@@ -48,7 +48,6 @@ class TestJoinRoom:
         join_callback: JoinCallback,
         message_factory,
         create_user_room: tuple[User, Room],
-        user_mock: User,
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811

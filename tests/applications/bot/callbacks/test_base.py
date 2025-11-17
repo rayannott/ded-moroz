@@ -101,4 +101,4 @@ class TestCallback:
             message.chat.id,
             "You are not registered yet. Please /start to register.",
         )
-        assert "User non-existent-user is not registered." in caplog.text
+        assert "User non-existent-user is not registered" in caplog.text

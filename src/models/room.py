@@ -22,6 +22,7 @@ class Room(SQLModel, table=True):  # type: ignore[call-arg]
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
 
+    @property
     def is_active(self) -> bool:
         return self.completed_dt is None
 

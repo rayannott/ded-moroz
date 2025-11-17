@@ -19,7 +19,7 @@ class Callback(ABC):
         """Wrapper to process message with user lookup and error handling.
         Override if user existence is not required."""
         if message.from_user is None:
-            logger.warning(f"Message {message} has no from_user; cannot identify user.")
+            logger.warning(f"Message {message} has no from_user; cannot identify user")
             return
         if message.from_user.is_bot:
             logger.info(f"Ignoring message from bot user {message.from_user}")
@@ -36,7 +36,7 @@ class Callback(ABC):
                 message.chat.id,
                 "You are not registered yet. Please /start to register.",
             )
-            logger.info(f"User {usr} is not registered.")
+            logger.info(f"User {usr} is not registered")
             return
 
     @abstractmethod

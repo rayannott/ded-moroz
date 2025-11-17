@@ -16,12 +16,6 @@ class UserNotFound(AppError):
     pass
 
 
-class AlreadyInRoom(AppError):
-    """Raised when a user is already in a room."""
-
-    pass
-
-
 class NotInRoom(AppError):
     """Raised when a user is not in a room."""
 

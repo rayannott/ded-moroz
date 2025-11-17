@@ -9,7 +9,6 @@ from src.models.room import Room
 from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from src.shared.exceptions import (
-    AlreadyInRoom,
     GameAlreadyCompleted,
     GameAlreadyStarted,
     InvalidName,
@@ -40,7 +39,7 @@ class Moroz:
         managed_rooms = self.database_repository.get_rooms_managed_by_user(
             user_id=created_by_user_id
         )
-        active_managed_rooms = [room for room in managed_rooms if room.is_active()]
+        active_managed_rooms = [room for room in managed_rooms if room.is_active]
         if len(active_managed_rooms) >= self.max_rooms_managed_by_user:
             msg = (
                 "Maximum number of rooms reached: "
@@ -78,17 +77,12 @@ class Moroz:
 
         Raises
             `RoomNotFound` if the room does not exist
-            `AlreadyInRoom` if the user is already in some room
             `UserNotFound` if the user does not exist
             `GameAlreadyStarted` if the game in the room has already started
             `GameAlreadyCompleted` if the game in the room has already completed
         """
         logger.info(f"User {user_id} joining {room_short_code=}")
         user = self.database_repository.get_user(user_id)
-        if user.room_id is not None:
-            msg = f"User {user.id=} is already in room id={user.room_id}"
-            logger.info(msg)
-            raise AlreadyInRoom(msg)
         room = self.database_repository.get_room_by_short_code(room_short_code)
         if room.game_started:
             msg = f"Game in room {room.id} has already started"
@@ -168,30 +162,25 @@ class Moroz:
         lines: list[str] = []
 
         lines.append(f"Room {room.display_short_code}")
-        lines.append(f"Managed by: {manager.formal_display_name}")
-        lines.append(f"Created at: {room.created_dt}")
+        lines.append(f"  managed by: {manager.formal_display_name}")
+        lines.append(f"  created at: {room.created_dt}")
 
-        lines.append("")  # blank line
-        lines.append("Participants:")
         if participants:
+            lines.append("  participants:")
             for usr in participants:
-                lines.append(f"  • {usr.formal_display_name}")
+                lines.append(f"    {usr.formal_display_name}")
         else:
-            lines.append("  (none)")
+            lines.append("  participants: none")
 
-        # Game status
-        lines.append("")  # blank line
         if not room.game_started:
-            lines.append("Game status: not started yet.")
+            lines.append("  game status: not started yet.")
         else:
-            lines.append(f"Game status: started at {room.started_dt}")
+            lines.append(f"  game status: started at {room.started_dt}")
             if room.game_completed:
-                lines.append(f"Completed at: {room.completed_dt}")
-            else:
-                lines.append("Game is ongoing...")
+                lines.append(f"  completed at: {room.completed_dt}")
 
         msg = "\n".join(lines)
-        logger.success(f"Got information about {room}.")
+        logger.success(f"Got information about {room=}")
         return msg
 
     def get_user_information(self, user_id: int) -> str:
@@ -202,18 +191,30 @@ class Moroz:
         lines: list[str] = []
         lines.append(f"You are {user.formal_display_name}!")
 
+        if rooms_managed_by_user := self.database_repository.get_rooms_managed_by_user(
+            user.id
+        ):
+            active_managed_rooms = [
+                room for room in rooms_managed_by_user if room.is_active
+            ]
+            lines.append("")
+            lines.append(
+                f"Active rooms you manage: {', '.join(room.display_short_code for room in active_managed_rooms)}"
+            )
+
+        lines.append("")
         if user.room_id is None:
             lines.append("Status: not in any room.")
             msg = "\n".join(lines)
-            logger.success(f"Got information about {user} (not in any room).")
+            logger.success(f"Got information about {user=} (not in any room)")
             return msg
 
         room = self.database_repository.get_room(user.room_id)
 
-        lines.append(self.get_room_information(room.id))
+        lines.append("You are in " + self.get_room_information(room.id))
 
         msg = "\n".join(lines)
-        logger.success(f"Got information about {user=}.")
+        logger.success(f"Got information about {user=}")
         return msg
 
     def update_name(self, user_id: int, name: str):

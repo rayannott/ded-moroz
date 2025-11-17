@@ -42,7 +42,7 @@ class TestRejectNonRegistered:
         user_from_message_patched.return_value = user_mock
         # WHEN / THEN
         callback.process_wrap(message)
-        assert "is not registered." in caplog.text
+        assert "is not registered" in caplog.text
         bot_mock.send_message.assert_called_once_with(
             message.chat.id,
             Regex(r".+not registered.+"),

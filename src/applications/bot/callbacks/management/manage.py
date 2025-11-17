@@ -49,7 +49,7 @@ class ManageCallback(Callback):
         logger.info(f"/manage from {user}")
 
         managed_rooms = self.moroz.get_rooms_managed_by_user(user)
-        active_managed_rooms = [room for room in managed_rooms if room.is_active()]
+        active_managed_rooms = [room for room in managed_rooms if room.is_active]
 
         if not active_managed_rooms:
             past_games_info = (
