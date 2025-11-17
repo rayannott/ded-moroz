@@ -163,10 +163,3 @@ class ManageCallback(Callback):
             CompleteCallback(bot=self.bot, moroz=self.moroz).process_management(
                 room=room, user=user
             )
-        else:
-            logger.debug(f"Unknown action chosen: {chosen_text} by {user}")
-            self.bot.send_message(
-                user.id,
-                "Unknown action selected.",
-                reply_markup=remove_keyboard(),
-            )

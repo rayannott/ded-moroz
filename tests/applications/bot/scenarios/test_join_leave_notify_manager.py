@@ -35,6 +35,24 @@ class TestJoinLeaveNotifyManager:
     def leave_callback(self, bot_mock, moroz_integrated) -> LeaveCallback:
         return LeaveCallback(bot=bot_mock, moroz=moroz_integrated)
 
+    def test_leave_without_joining(
+        self,
+        leave_callback: LeaveCallback,
+        message_factory,
+        database_repo: DatabaseRepository,
+        bot_mock,
+    ):
+        # GIVEN
+        user = database_repo.create_user(id=303, username="leaver", name="Leaver")
+        message = message_factory(text="/leave", chat_id=user.id)
+        # WHEN
+        leave_callback.process(user, message=message)
+        # THEN
+        bot_mock.send_message.assert_called_once_with(
+            user.id,
+            "You are not currently in any room.",
+        )
+
     def test_join_leave_notify_manager(
         self,
         join_callback: JoinCallback,
