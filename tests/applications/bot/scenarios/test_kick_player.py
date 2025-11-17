@@ -35,23 +35,13 @@ class TestKickPlayer:
 
     @pytest.fixture
     def create_manager_member_room(
-        self, database_repo: DatabaseRepository
+        self, database_repo: DatabaseRepository, create_manager_room: tuple[User, Room]
     ) -> tuple[User, User, Room]:
-        # manager u0
-        manager = database_repo.create_user(
-            id=1000,
-            username="u0_manager",
-            name="Manager 0",
-        )
-        # member u1
+        manager, room = create_manager_room
         member = database_repo.create_user(
             id=1001,
             username="u1_member",
             name="Member 1",
-        )
-
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
         )
 
         database_repo.join_room(member.id, room.id)
@@ -80,9 +70,7 @@ class TestKickPlayer:
         kick_callback.process_management(manager, room)
 
         # THEN – a next step handler is registered
-        _, (prompt_msg, callback_fn), kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), kwargs = bot_mock.register_next_step_handler.mock_calls[0]
         assert callback_fn == kick_callback._handle_player_selected
 
         # WHEN (manager selects the member to kick)
@@ -120,18 +108,12 @@ class TestKickPlayer:
         self,
         kick_callback: KickCallback,
         database_repo: DatabaseRepository,
+        create_manager_room: tuple[User, Room],
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN: manager + room with no players returned by moroz
-        manager = database_repo.create_user(
-            id=3000,
-            username="manager_no_players",
-            name="Manager NoPlayers",
-        )
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-        )
+        manager, room = create_manager_room
         # WHEN
         kick_callback.process_management(manager, room)
         # THEN
@@ -151,13 +133,11 @@ class TestKickPlayer:
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
-        manager, member, room = create_manager_member_room
+        manager, _, room = create_manager_member_room
 
         # manager initiates kick to register handler
         kick_callback.process_management(manager, room)
-        _, (prompt_msg, callback_fn), kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), kwargs = bot_mock.register_next_step_handler.mock_calls[0]
 
         # WHEN – manager presses "Cancel"
         cancel_message = message_factory(text="Cancel")

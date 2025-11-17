@@ -22,17 +22,6 @@ class TestManagePickOption:
         return ManageCallback(bot=bot_mock, moroz=moroz_integrated)
 
     @pytest.fixture
-    def create_user_room(self, database_repo: DatabaseRepository, user_mock: User):
-        created_user = database_repo.create_user(
-            user_mock.id, user_mock.username, user_mock.name
-        )
-        created_room = database_repo.create_room(
-            created_by_user_id=created_user.id,
-        )
-        this_user = database_repo.get_user(created_user.id)
-        return this_user, created_room
-
-    @pytest.fixture
     def get_keyboard_patch(self):
         with mock.patch(
             "src.applications.bot.callbacks.management.manage.get_keyboard"
@@ -45,10 +34,10 @@ class TestManagePickOption:
         database_repo: DatabaseRepository,
         message_factory,
         bot_mock,
-        create_user_room,
+        create_manager_room,
     ):
         # GIVEN
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         message = message_factory(text="/manage")
         some_other_user = database_repo.create_user(
             id=123, username="otheruser", name="Other"
@@ -89,12 +78,12 @@ class TestManagePickOption:
         self,
         manage_callback: ManageCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         get_keyboard_patch,
         bot_mock,
     ):
         # GIVEN
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         message = message_factory(text="/manage")
         # WHEN
         manage_callback.process(manager_user, message=message)
@@ -112,17 +101,15 @@ class TestManagePickOption:
         self,
         manage_callback: ManageCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         bot_mock,
     ):
         # GIVEN
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         message = message_factory(text="/manage")
         # WHEN
         manage_callback.process(manager_user, message=message)
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         answer_message = message_factory(text=ManageActions.CANCEL.value)
         callback_fn(
             answer_message,
@@ -140,18 +127,16 @@ class TestManagePickOption:
         self,
         manage_callback: ManageCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         caplog: pytest.LogCaptureFixture,  # noqa: F811
         bot_mock,
     ):
         # GIVEN
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         message = message_factory(text="/manage")
         # WHEN
         manage_callback.process(manager_user, message=message)
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         answer_message = message_factory(text=created_room.display_short_code)
         callback_fn(
             answer_message,
@@ -173,12 +158,12 @@ class TestManagePickOption:
         self,
         manage_callback: ManageCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         get_keyboard_patch,
         bot_mock,
     ):
         # GIVEN (a new room and its manager)
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         room_chosen_message = message_factory(text=created_room.display_short_code)
         kb_mock = mock.MagicMock()
         get_keyboard_patch.return_value = kb_mock
@@ -209,13 +194,13 @@ class TestManagePickOption:
         self,
         manage_callback: ManageCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
         get_keyboard_patch,
         bot_mock,
     ):
         # GIVEN (a room in progress and its manager)
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         # game started:
         database_repo.set_game_started(created_room.id, DateTime.utcnow())
         room_chosen_message = message_factory(text=created_room.display_short_code)
@@ -247,11 +232,11 @@ class TestManagePickOption:
         self,
         manage_callback: ManageCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         bot_mock,
     ):
         # GIVEN
-        manager_user, created_room = create_user_room
+        manager_user, created_room = create_manager_room
         action_chosen_message = message_factory(text="Some invalid action")
         # WHEN
         manage_callback._handle_action_chosen(

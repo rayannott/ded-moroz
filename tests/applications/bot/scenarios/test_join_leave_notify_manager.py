@@ -5,6 +5,8 @@ import pytest
 # Assuming the location of JoinCallback based on your project structure
 from src.applications.bot.callbacks.join import JoinCallback
 from src.applications.bot.callbacks.leave import LeaveCallback
+from src.models.room import Room
+from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from tests.utils import Regex
 
@@ -36,15 +38,15 @@ class TestJoinLeaveNotifyManager:
     def test_join_leave_notify_manager(
         self,
         join_callback: JoinCallback,
+        create_manager_room: tuple[User, Room],
         leave_callback: LeaveCallback,
         message_factory,
         database_repo: DatabaseRepository,
         bot_mock,
     ):
-        manager = database_repo.create_user(id=201, username="manager", name="Manager")
+        # GIVEN
+        manager, room = create_manager_room
         joiner = database_repo.create_user(id=202, username="joiner", name="Joiner")
-
-        room = database_repo.create_room(created_by_user_id=manager.id)
 
         message = message_factory(text="/join", chat_id=joiner.id)
 
@@ -53,9 +55,7 @@ class TestJoinLeaveNotifyManager:
         join_callback.process(joiner_user, message=message)
 
         # THEN
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         assert callback_fn == join_callback._handle_room_code_entered
 
         # WHEN (user enters room code)

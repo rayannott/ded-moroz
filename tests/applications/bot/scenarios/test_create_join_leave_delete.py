@@ -89,9 +89,7 @@ class TestCreateJoinLeaveDelete:
         join_callback.process(this_user, message=join_message)
 
         # THEN Join
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         initiated_join_call = mock.call(
             user_mock.id,
             Regex("Please enter.+"),

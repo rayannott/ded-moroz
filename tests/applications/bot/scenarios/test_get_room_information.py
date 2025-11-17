@@ -16,23 +16,14 @@ class TestGetRoomInformation:
     def info_callback(self, bot_mock, moroz_integrated) -> InfoCallback:
         return InfoCallback(bot=bot_mock, moroz=moroz_integrated)
 
-    @pytest.fixture
-    def create_user_room(self, database_repo: DatabaseRepository):
-        created_user = database_repo.create_user(
-            id=301, username="manager", name="Manager"
-        )
-        created_room = database_repo.create_room(created_by_user_id=created_user.id)
-        this_user = database_repo.get_user(created_user.id)
-        return this_user, created_room
-
     def test_empty_room(
         self,
         info_callback: InfoCallback,
         bot_mock,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
     ):
         # GIVEN
-        manager, room = create_user_room
+        manager, room = create_manager_room
 
         # WHEN
         info_callback.process_management(manager, room)
@@ -52,10 +43,10 @@ class TestGetRoomInformation:
         info_callback: InfoCallback,
         database_repo: DatabaseRepository,
         bot_mock,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
     ):
         # GIVEN
-        manager, room = create_user_room
+        manager, room = create_manager_room
         participant1 = database_repo.create_user(
             id=302, username="participant1", name="P1"
         )
@@ -83,10 +74,10 @@ class TestGetRoomInformation:
         info_callback: InfoCallback,
         database_repo: DatabaseRepository,
         bot_mock,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
     ):
         # GIVEN
-        manager, room = create_user_room
+        manager, room = create_manager_room
         participant1 = database_repo.create_user(
             id=304, username="participant1", name="P1"
         )
@@ -113,10 +104,10 @@ class TestGetRoomInformation:
         info_callback: InfoCallback,
         database_repo: DatabaseRepository,
         bot_mock,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
     ):
         # GIVEN
-        manager, room = create_user_room
+        manager, room = create_manager_room
         participant1 = database_repo.create_user(
             id=305, username="participant1", name="P1"
         )

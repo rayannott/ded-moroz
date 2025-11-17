@@ -5,6 +5,8 @@ from pytest import LogCaptureFixture
 
 from src.applications.bot.callbacks.management.complete import CompleteCallback
 from src.applications.bot.callbacks.management.play import PlayCallback
+from src.models.room import Room
+from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from src.services.moroz import Moroz
 from tests.utils import Regex
@@ -47,11 +49,11 @@ class TestStartCompleteGame:
         self,
         start_game_callback: PlayCallback,
         database_repo: DatabaseRepository,
+        create_manager_room: tuple[User, Room],
         bot_mock,
     ):
         # GIVEN
-        manager = database_repo.create_user(id=301, username="manager", name="Manager")
-        room = database_repo.create_room(created_by_user_id=manager.id)
+        manager, room = create_manager_room
 
         manager = database_repo.get_user(manager.id)
 
@@ -69,14 +71,14 @@ class TestStartCompleteGame:
         self,
         start_game_callback: PlayCallback,
         message_factory,
+        create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
-        manager = database_repo.create_user(id=401, username="manager", name="Manager")
+        manager, room = create_manager_room
         player_ids = [200 + i for i in range(5)]
-        room = database_repo.create_room(created_by_user_id=manager.id)
         players = [
             database_repo.create_user(
                 id=id_, username=f"player{i + 1}", name=f"Player{id_}"
@@ -130,14 +132,14 @@ class TestStartCompleteGame:
     def test_manager_plays_duet(
         self,
         start_game_callback: PlayCallback,
+        create_manager_room: tuple[User, Room],
         message_factory,
         database_repo: DatabaseRepository,
         bot_mock,
     ):
         # GIVEN
-        manager = database_repo.create_user(id=601, username="manager", name="Manager")
+        manager, room = create_manager_room
         player = database_repo.create_user(id=602, username="player1", name="Player602")
-        room = database_repo.create_room(created_by_user_id=manager.id)
         database_repo.join_room(user_id=player.id, room_id=room.id)
         database_repo.join_room(user_id=manager.id, room_id=room.id)
         manager = database_repo.get_user(manager.id)
