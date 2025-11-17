@@ -39,7 +39,6 @@ class TestJoinRoom:
         )
         created_room = database_repo.create_room(
             created_by_user_id=created_user.id,
-            room_name="Test Room",
         )
         this_user = database_repo.get_user(created_user.id)
         return this_user, created_room

@@ -28,7 +28,6 @@ class TestManagePickOption:
         )
         created_room = database_repo.create_room(
             created_by_user_id=created_user.id,
-            room_name="Test Room",
         )
         this_user = database_repo.get_user(created_user.id)
         return this_user, created_room
@@ -74,9 +73,7 @@ class TestManagePickOption:
             id=201, username="manager", name="Manager"
         )
         # create a finished room
-        past_room = database_repo.create_room(
-            created_by_user_id=manager_user.id, room_name="Past Room"
-        )
+        past_room = database_repo.create_room(created_by_user_id=manager_user.id)
         database_repo.set_game_started(past_room.id, DateTime.utcnow().add(minutes=10))
         database_repo.set_game_completed(past_room.id, DateTime.utcnow().add(days=4))
         message = message_factory(text="/manage")

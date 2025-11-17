@@ -36,10 +36,7 @@ class TestRoomDeletedNotifyMembers:
         member1 = database_repo.create_user(id=202, username="member1", name="Member1")
         member2 = database_repo.create_user(id=203, username="member2", name="Member2")
 
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
         database_repo.join_room(user_id=member1.id, room_id=room.id)
         database_repo.join_room(user_id=member2.id, room_id=room.id)
 

@@ -36,10 +36,7 @@ class TestJoinWhileInRoom:
         created_user = database_repo.create_user(
             user_mock.id, user_mock.username, user_mock.name
         )
-        created_room = database_repo.create_room(
-            created_by_user_id=created_user.id,
-            room_name="Test Room",
-        )
+        created_room = database_repo.create_room(created_by_user_id=created_user.id)
         database_repo.join_room(user_id=created_user.id, room_id=created_room.id)
 
         # WHEN

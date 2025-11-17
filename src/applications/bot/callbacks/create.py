@@ -10,10 +10,7 @@ class CreateCallback(Callback):
     def process(self, user: User, *, message: types.Message):
         logger.info(f"/create from {user}")
         try:
-            room = self.moroz.create_room(
-                created_by_user_id=user.id,
-                room_name="New Room",
-            )
+            room = self.moroz.create_room(created_by_user_id=user.id)
         except MaxNumberOfRoomsReached:
             self.bot.send_message(
                 user.id,

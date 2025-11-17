@@ -7,7 +7,6 @@ from src.applications.bot.callbacks.management.kick import KickCallback
 from src.models.room import Room
 from src.models.user import User
 from src.repositories.database import DatabaseRepository
-from src.shared.exceptions import UserNotFound
 from tests.utils import Regex
 
 
@@ -53,7 +52,6 @@ class TestKickPlayer:
 
         room = database_repo.create_room(
             created_by_user_id=manager.id,
-            room_name="Kick Test Room",
         )
 
         database_repo.join_room(member.id, room.id)
@@ -118,8 +116,6 @@ class TestKickPlayer:
             [to_manager_prompt, to_manager_confirmation, to_kicked_player]
         )
 
-    # --- sub-scenarios ---
-
     def test_kick_no_players_in_room(
         self,
         kick_callback: KickCallback,
@@ -135,15 +131,9 @@ class TestKickPlayer:
         )
         room = database_repo.create_room(
             created_by_user_id=manager.id,
-            room_name="Empty Room",
         )
-
-        # Force no players to be returned
-        kick_callback.moroz.get_users_in_room = mock.Mock(return_value=[])
-
         # WHEN
         kick_callback.process_management(manager, room)
-
         # THEN
         bot_mock.send_message.assert_called_with(
             manager.id,
@@ -213,41 +203,6 @@ class TestKickPlayer:
         assert "Invalid player selection" in caplog.text
         assert invalid_choice in caplog.text
 
-    def test_kick_internal_error_user_not_found(
-        self,
-        kick_callback: KickCallback,
-        create_manager_member_room: tuple[User, User, Room],
-        bot_mock,
-        message_factory,
-        caplog: LogCaptureFixture,  # noqa: F811
-    ):
-        # GIVEN
-        manager, member, room = create_manager_member_room
-
-        chosen_text = member.formal_display_name
-        player_repr_to_id = {chosen_text: member.id}
-        message = message_factory(text=chosen_text)
-
-        # Force UserNotFound inside the try block
-        kick_callback.moroz.get_user = mock.Mock(side_effect=UserNotFound)
-
-        # WHEN
-        kick_callback._handle_player_selected(
-            message,
-            user=manager,
-            room=room,
-            player_repr_to_id=player_repr_to_id,
-        )
-
-        # THEN
-        bot_mock.send_message.assert_called_with(
-            manager.id,
-            "Internal error.",
-            reply_markup=mock.ANY,
-        )
-        # critical log about missing player
-        assert "Player chosen_text=" in caplog.text
-
     def test_kick_player_already_not_in_room(
         self,
         kick_callback: KickCallback,
@@ -259,8 +214,6 @@ class TestKickPlayer:
     ):
         # GIVEN
         manager, member, room = create_manager_member_room
-
-        # Simulate race: player left the room after selection list was shown
         database_repo.leave_room(member.id)
 
         player_repr_to_id = {member.formal_display_name: member.id}

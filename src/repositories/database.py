@@ -24,14 +24,13 @@ class DatabaseRepository:
         SQLModel.metadata.create_all(engine)
         self.session = sessionmaker(engine)
 
-    def create_room(self, created_by_user_id: int, room_name: str) -> Room:
-        logger.debug(f"Creating room {room_name!r} by {created_by_user_id}")
+    def create_room(self, created_by_user_id: int) -> Room:
+        logger.debug(f"Creating room by {created_by_user_id}")
         room_id = random.randbytes(4).hex()
 
         room = Room(
             id=room_id,
             short_code=int(room_id, 16) % 10_000,
-            name=room_name,
             manager_user_id=created_by_user_id,
         )
 

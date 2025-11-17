@@ -51,10 +51,7 @@ class TestStartCompleteGame:
     ):
         # GIVEN
         manager = database_repo.create_user(id=301, username="manager", name="Manager")
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
 
         manager = database_repo.get_user(manager.id)
 
@@ -79,10 +76,7 @@ class TestStartCompleteGame:
         # GIVEN
         manager = database_repo.create_user(id=401, username="manager", name="Manager")
         player_ids = [200 + i for i in range(5)]
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
         players = [
             database_repo.create_user(
                 id=id_, username=f"player{i + 1}", name=f"Player{id_}"
@@ -143,10 +137,7 @@ class TestStartCompleteGame:
         # GIVEN
         manager = database_repo.create_user(id=601, username="manager", name="Manager")
         player = database_repo.create_user(id=602, username="player1", name="Player602")
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
         database_repo.join_room(user_id=player.id, room_id=room.id)
         database_repo.join_room(user_id=manager.id, room_id=room.id)
         manager = database_repo.get_user(manager.id)
@@ -186,10 +177,7 @@ class TestStartCompleteGame:
         # GIVEN
         manager = database_repo.create_user(id=501, username="manager", name="Manager")
         player_ids = [300 + i for i in range(3)]
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
         players = [
             database_repo.create_user(
                 id=id_, username=f"player{i + 1}", name=f"Player{id_}"

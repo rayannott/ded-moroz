@@ -42,10 +42,7 @@ class TestSetName:
         user = database_repo.create_user(
             id=202, username="simpleuser", name="Simple User"
         )
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
         name_message = message_factory(text="/name", chat_id=user.id)
         # WHEN
         name_callback.process(user, message=name_message)

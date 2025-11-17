@@ -4,7 +4,7 @@ from src.applications.bot.callbacks.management.base import ManagementCallback
 from src.applications.bot.utils import get_keyboard, remove_keyboard, text
 from src.models.room import Room
 from src.models.user import User
-from src.shared.exceptions import NotInRoom, UserNotFound
+from src.shared.exceptions import NotInRoom
 
 
 class KickCallback(ManagementCallback):
@@ -58,7 +58,7 @@ class KickCallback(ManagementCallback):
             logger.debug(f"Kick action cancelled by {user}")
             return
 
-        if chosen_text not in player_repr_to_id:
+        if (player_to_kick_id := player_repr_to_id.get(chosen_text)) is None:
             self.bot.send_message(
                 user.id,
                 "Invalid selection. Please try the kick command again.",
@@ -68,17 +68,8 @@ class KickCallback(ManagementCallback):
             return
 
         try:
-            player_id_to_kick = player_repr_to_id[chosen_text]
-            player_to_kick = self.moroz.get_user(player_id_to_kick)
+            player_to_kick = self.moroz.get_user(player_to_kick_id)
             room = self.moroz.leave_room(user_id=player_to_kick.id)
-        except (KeyError, UserNotFound):
-            logger.opt(exception=True).critical(f"Player {chosen_text=} not found")
-            self.bot.send_message(
-                user.id,
-                "Internal error.",
-                reply_markup=remove_keyboard(),
-            )
-            return
         except NotInRoom:
             logger.warning(f"Player {chosen_text=} was not in room (why?)")
             self.bot.send_message(

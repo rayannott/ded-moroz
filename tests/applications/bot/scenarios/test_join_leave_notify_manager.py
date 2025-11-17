@@ -44,10 +44,7 @@ class TestJoinLeaveNotifyManager:
         manager = database_repo.create_user(id=201, username="manager", name="Manager")
         joiner = database_repo.create_user(id=202, username="joiner", name="Joiner")
 
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
+        room = database_repo.create_room(created_by_user_id=manager.id)
 
         message = message_factory(text="/join", chat_id=joiner.id)
 
