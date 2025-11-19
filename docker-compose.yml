@@ -1,0 +1,13 @@
+services:
+  ded-moroz-bot:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: eu-north-1
+        awslogs-group: ded-moroz-bot
+        awslogs-stream: ded-moroz-bot-log-stream
+    volumes:
+      - /srv/ded-moroz/data:/data
