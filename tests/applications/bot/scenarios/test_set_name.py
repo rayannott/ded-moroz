@@ -2,6 +2,8 @@ import pytest
 
 from src.applications.bot.callbacks.join import JoinCallback
 from src.applications.bot.callbacks.name import NameCallback
+from src.models.room import Room
+from src.models.user import User
 from src.repositories.database import DatabaseRepository
 
 
@@ -33,25 +35,20 @@ class TestSetName:
         self,
         join_callback: JoinCallback,
         name_callback: NameCallback,
+        create_manager_room: tuple[User, Room],
         message_factory,
         database_repo: DatabaseRepository,
         bot_mock,
     ):
         # GIVEN
-        manager = database_repo.create_user(id=201, username="manager", name="Manager")
+        manager, room = create_manager_room
         user = database_repo.create_user(
             id=202, username="simpleuser", name="Simple User"
-        )
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
         )
         name_message = message_factory(text="/name", chat_id=user.id)
         # WHEN
         name_callback.process(user, message=name_message)
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         # THEN
         assert callback_fn == name_callback._set_name
 
@@ -70,9 +67,7 @@ class TestSetName:
         join_message = message_factory(text="/join", chat_id=user.id)
         join_callback.process(updated_user, message=join_message)
         # THEN
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[1]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[1]
         assert callback_fn == join_callback._handle_room_code_entered
         # WHEN (user enters room code)
         join_room_message = message_factory(text=room.display_short_code)
@@ -108,9 +103,7 @@ class TestSetName:
         name_message = message_factory(text="/name", chat_id=user.id)
         # WHEN
         name_callback.process(user, message=name_message)
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         # THEN
         assert callback_fn == name_callback._set_name
 

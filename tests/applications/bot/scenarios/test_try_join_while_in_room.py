@@ -2,6 +2,7 @@ import pytest
 from pytest import LogCaptureFixture
 
 from src.applications.bot.callbacks.join import JoinCallback
+from src.models.room import Room
 from src.models.user import User
 from src.repositories.database import DatabaseRepository
 
@@ -26,28 +27,22 @@ class TestJoinWhileInRoom:
         self,
         join_callback: JoinCallback,
         message_factory,
-        user_mock: User,
+        create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
         message = message_factory(text="/join")
-        created_user = database_repo.create_user(
-            user_mock.id, user_mock.username, user_mock.name
-        )
-        created_room = database_repo.create_room(
-            created_by_user_id=created_user.id,
-            room_name="Test Room",
-        )
+        created_user, created_room = create_manager_room
         database_repo.join_room(user_id=created_user.id, room_id=created_room.id)
+        this_user = database_repo.get_user(created_user.id)
 
         # WHEN
-        that_user = database_repo.get_user(created_user.id)
-        join_callback.process(that_user, message=message)
+        join_callback.process(this_user, message=message)
 
         # THEN
         bot_mock.send_message.assert_called_once_with(
-            created_user.id,
+            this_user.id,
             f"You have already joined the room {created_room.display_short_code}. Please /leave it first.",
         )

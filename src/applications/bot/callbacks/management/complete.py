@@ -9,7 +9,7 @@ from src.models.user import User
 class CompleteCallback(ManagementCallback):
     def process_management(self, user: User, room: Room):
         logger.info(f"Complete action chosen by {user} in {room}")
-        users_in_just_completed_room = self.moroz.complete_game_in_room(room)
+        users_in_just_completed_room = self.moroz.complete_game_in_room(room.id)
 
         self.bot.send_message(
             user.id,

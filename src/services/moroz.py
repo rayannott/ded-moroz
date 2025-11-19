@@ -9,13 +9,11 @@ from src.models.room import Room
 from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from src.shared.exceptions import (
-    AlreadyInRoom,
     GameAlreadyCompleted,
     GameAlreadyStarted,
     InvalidName,
     MaxNumberOfRoomsReached,
     RoomTooSmall,
-    TargetNotAssigned,
 )
 from src.shared.utils import is_name_valid
 
@@ -28,7 +26,7 @@ class Moroz:
     max_rooms_managed_by_user: int
     min_players_to_start_game: int
 
-    def create_room(self, created_by_user_id: int, room_name: str) -> Room:
+    def create_room(self, created_by_user_id: int) -> Room:
         """Create a new room managed by the given user
         and return it.
 
@@ -37,12 +35,11 @@ class Moroz:
                 the maximum allowed number of rooms
             `UserNotFound` if the user does not exist
         """
-        logger.info(f"Creating room {room_name!r} by {created_by_user_id=}")
-        active_managed_rooms = (
-            self.database_repository.get_active_rooms_managed_by_user(
-                user_id=created_by_user_id
-            )
+        logger.info(f"Creating room by {created_by_user_id=}")
+        managed_rooms = self.database_repository.get_rooms_managed_by_user(
+            user_id=created_by_user_id
         )
+        active_managed_rooms = [room for room in managed_rooms if room.is_active]
         if len(active_managed_rooms) >= self.max_rooms_managed_by_user:
             msg = (
                 "Maximum number of rooms reached: "
@@ -55,7 +52,6 @@ class Moroz:
             raise MaxNumberOfRoomsReached(msg)
         room = self.database_repository.create_room(
             created_by_user_id=created_by_user_id,
-            room_name=room_name,
         )
         logger.success(f"Room created {room=}")
         return room
@@ -69,29 +65,24 @@ class Moroz:
         logger.info(f"Deleting {room_id=} by its manager")
         users_in_room = self.database_repository.get_users_in_room(room_id)
         for user in users_in_room:
-            self.leave_room(user)
+            self.leave_room(user_id=user.id)
         self.database_repository.delete_room(
             room_id=room_id,
         )
         logger.success(f"Room deleted {room_id=}")
         return users_in_room
 
-    def join_room_by_short_code(self, user: User, room_short_code: int) -> Room:
+    def join_room_by_short_code(self, user_id: int, room_short_code: int) -> Room:
         """Join the user to the given room.
 
         Raises
             `RoomNotFound` if the room does not exist
-            `AlreadyInRoom` if the user is already in some room
             `UserNotFound` if the user does not exist
             `GameAlreadyStarted` if the game in the room has already started
             `GameAlreadyCompleted` if the game in the room has already completed
         """
-        logger.info(f"User {user} joining {room_short_code=}")
-        user = self.database_repository.get_user(user.id)
-        if user.room_id is not None:
-            msg = f"User {user.id=} is already in room id={user.room_id}"
-            logger.info(msg)
-            raise AlreadyInRoom(msg)
+        logger.info(f"User {user_id} joining {room_short_code=}")
+        user = self.database_repository.get_user(user_id)
         room = self.database_repository.get_room_by_short_code(room_short_code)
         if room.game_started:
             msg = f"Game in room {room.id} has already started"
@@ -108,139 +99,155 @@ class Moroz:
         logger.success(f"User {user} joined {room}")
         return room
 
-    def start_game_in_room(self, room: Room) -> list[tuple[User, User]]:
-        logger.info(f"Starting game in room {room}")
-        users_in_room = self.database_repository.get_users_in_room(room.id)
+    def start_game_in_room(self, room_id: str) -> list[tuple[User, User]]:
+        logger.info(f"Starting game in {room_id=}")
+        users_in_room = self.database_repository.get_users_in_room(room_id)
         if len(users_in_room) < self.min_players_to_start_game:
             msg = (
-                f"Cannot start game in room {room.id=} with "
+                f"Cannot start game in {room_id=} with "
                 f"only {len(users_in_room)} users; minimum is {self.min_players_to_start_game}"
             )
             logger.info(msg)
             raise RoomTooSmall(msg)
-        logger.info(f"Game started in {room} with users {users_in_room}")
+        logger.info(f"Game started in {room_id=} with users {users_in_room}")
         random.shuffle(users_in_room)
         target_pairs: list[tuple[User, User]] = [
             (user, target)
             for user, target in pairwise(users_in_room + [users_in_room[0]])
         ]
         self.database_repository.assign_targets(
-            room_id=room.id,
+            room_id=room_id,
             user_target_pairs=[(user.id, target.id) for user, target in target_pairs],
         )
         self.database_repository.set_game_started(
-            room_id=room.id,
+            room_id=room_id,
             started_dt=DateTime.utcnow(),
         )
-        logger.success(f"Game started in room {room}")
+        logger.success(f"Game started in {room_id=}")
         return target_pairs
 
-    def complete_game_in_room(self, room: Room) -> list[User]:
-        logger.info(f"Completing game in room {room}")
-        users_in_room = self.database_repository.get_users_in_room(room.id)
+    def complete_game_in_room(self, room_id: str) -> list[User]:
+        logger.info(f"Completing game in room {room_id=}")
+        users_in_room = self.database_repository.get_users_in_room(room_id)
         self.database_repository.set_game_completed(
-            room_id=room.id,
+            room_id=room_id,
             completed_dt=DateTime.utcnow(),
         )
         for usr in users_in_room:
-            self.leave_room(user=usr)
-        logger.success(f"Game completed in room {room}")
+            self.leave_room(user_id=usr.id)
+        logger.success(f"Game completed in {room_id=}")
         return users_in_room
 
-    def get_active_rooms_managed_by_user(self, user: User) -> list[Room]:
-        logger.info(f"Getting active rooms managed by {user}")
-        return self.database_repository.get_active_rooms_managed_by_user(user.id)
+    def get_rooms_managed_by_user(self, user: User) -> list[Room]:
+        logger.info(f"Getting rooms managed by {user}")
+        return self.database_repository.get_rooms_managed_by_user(user.id)
 
-    def create_user(self, user: User) -> User:
-        logger.info(f"Creating {user}")
+    def create_user(self, user_id: int, username: str | None, name: str | None) -> User:
+        logger.info(
+            f"Creating user with id={user_id}, username={username}, name={name}"
+        )
         new_user = self.database_repository.create_user(
-            id=user.id,
-            username=user.username,
-            name=user.name,
+            id=user_id, username=username, name=name
         )
         logger.success(f"Created {new_user}")
         return new_user
 
-    def get_room_information(self, room: Room) -> str:
-        logger.info(f"Getting information about {room}")
-        this_room = self.database_repository.get_room(room.id)
-        msg = f"Room {this_room.display_short_code} ({this_room.name})\n"
-        manager = self.database_repository.get_user(this_room.manager_user_id)
-        msg += f"Managed by {manager.formal_display_name}"
-        msg += f"\nCreated at {this_room.created_dt}"
-        users_in_room = self.database_repository.get_users_in_room(this_room.id)
-        msg += "\nParticipants:\n  "
-        msg += (
-            "\n".join(usr.formal_display_name for usr in users_in_room)
-            or "No participants yet"
-        )
-        if this_room.game_started:
-            msg += f"\nGame started at {this_room.started_dt}"
-            if this_room.game_completed:
-                msg += f"\nGame completed at {this_room.completed_dt}"
-            else:
-                msg += "\nGame is ongoing..."
+    def get_room_information(self, room_id: str) -> str:
+        logger.info(f"Getting information about {room_id=}")
+
+        room = self.database_repository.get_room(room_id)
+        manager = self.database_repository.get_user(room.manager_user_id)
+        participants = self.database_repository.get_users_in_room(room.id)
+
+        lines: list[str] = []
+
+        lines.append(f"Room {room.display_short_code}")
+        lines.append(f"  managed by: {manager.formal_display_name}")
+        lines.append(f"  created at: {room.created_dt}")
+
+        if participants:
+            lines.append("  participants:")
+            for usr in participants:
+                lines.append(f"    {usr.formal_display_name}")
         else:
-            msg += "\nGame has not started yet"
-        logger.success(f"Got information about {this_room}.")
+            lines.append("  participants: none")
+
+        if not room.game_started:
+            lines.append("  game status: not started yet.")
+        else:
+            lines.append(f"  game status: started at {room.started_dt}")
+            if room.game_completed:
+                lines.append(f"  completed at: {room.completed_dt}")
+
+        msg = "\n".join(lines)
+        logger.success(f"Got information about {room=}")
         return msg
 
-    def get_user_information(self, user: User) -> str:
-        logger.info(f"Getting information about {user}")
-        this_user = self.database_repository.get_user(user.id)
-        msg = f"You are {this_user.display_name}"
-        if this_user.username is not None:
-            msg += f" (@{this_user.username})"
-        if this_user.room_id is None:
-            logger.success(f"Got information about {this_user} (not in any room).")
-            return msg + "\nnot in any room."
-        room = self.database_repository.get_room(this_user.room_id)
-        msg += (
-            f"\ncurrently in room {room.display_short_code} (created {room.created_dt})"
-        )
-        that_room_manager = self.database_repository.get_user(room.manager_user_id)
-        msg += f" managed by {that_room_manager.display_name}"
-        # TODO show number of participants
-        try:
-            target = self.database_repository.get_target(
-                this_user.room_id, this_user.id
+    def get_user_information(self, user_id: int) -> str:
+        logger.info(f"Getting information about {user_id=}")
+
+        user = self.database_repository.get_user(user_id)
+
+        lines: list[str] = []
+        lines.append(f"You are {user.formal_display_name}!")
+
+        if rooms_managed_by_user := self.database_repository.get_rooms_managed_by_user(
+            user.id
+        ):
+            active_managed_rooms = [
+                room for room in rooms_managed_by_user if room.is_active
+            ]
+            lines.append("")
+            lines.append(
+                f"Active rooms you manage: {', '.join(room.display_short_code for room in active_managed_rooms)}"
             )
-            started_at = (
-                room.started_dt if room.started_dt is not None else "unknown time"
-            )
-            if started_at == "unknown time":
-                logger.error(f"Game in room {room} has started but started_dt is None")
-            msg += f"\nYour target is {target.display_name} (assigned when game started at {started_at})"
-        except TargetNotAssigned:
-            msg += "\nGame has not started yet; no target assigned"
-        logger.success(f"Got information about {this_user}.")
+
+        lines.append("")
+        if user.room_id is None:
+            lines.append("Status: not in any room.")
+            msg = "\n".join(lines)
+            logger.success(f"Got information about {user=} (not in any room)")
+            return msg
+
+        room = self.database_repository.get_room(user.room_id)
+
+        lines.append("You are in " + self.get_room_information(room.id))
+
+        msg = "\n".join(lines)
+        logger.success(f"Got information about {user=}")
         return msg
 
-    def update_name(self, user: User, name: str):
-        logger.info(f"Updating {user} name to {name}")
+    def update_name(self, user_id: int, name: str):
+        logger.info(f"Updating {user_id=} name to {name=}")
         status = is_name_valid(name)
         if not status:
-            logger.info(f"Invalid name {name!r} provided by {user}: {status.reason}")
+            logger.info(
+                f"Invalid name {name!r} provided by {user_id=}: {status.reason}"
+            )
             raise InvalidName(status.reason)
-        self.database_repository.set_user_name(user.id, name)
-        logger.success(f"Updated {user} name to {name}")
+        self.database_repository.set_user_name(user_id, name)
+        logger.success(f"Updated {user_id=} name to {name=}")
 
-    def get_user(self, user: User) -> User:
-        logger.info(f"Getting {user}")
-        return self.database_repository.get_user(user.id)
+    def get_user(self, user_id: int) -> User:
+        logger.info(f"Getting {user_id=}")
+        return self.database_repository.get_user(user_id)
+
+    def get_users_in_room(self, room_id: str) -> list[User]:
+        logger.info(f"Getting users in room id={room_id}")
+        return self.database_repository.get_users_in_room(room_id)
 
     def get_room(self, room_id: str) -> Room:
         logger.info(f"Getting {room_id=}")
         return self.database_repository.get_room(room_id)
 
-    def leave_room(self, user: User) -> Room:
+    def leave_room(self, user_id: int) -> Room:
         """Make the user leave their current room.
 
         Raises
             `UserNotFound` if the user does not exist
             `NotInRoom` if the user is not in any room
         """
-        logger.info(f"User {user} leaving room id={user}")
-        left_room = self.database_repository.leave_room(user.id)
-        logger.success(f"User {user} left their room")
+        logger.info(f"User {user_id} leaving room id={user_id}")
+        left_room = self.database_repository.leave_room(user_id)
+        logger.success(f"User {user_id} left their room")
         return left_room

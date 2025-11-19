@@ -24,14 +24,13 @@ class DatabaseRepository:
         SQLModel.metadata.create_all(engine)
         self.session = sessionmaker(engine)
 
-    def create_room(self, created_by_user_id: int, room_name: str) -> Room:
-        logger.debug(f"Creating room {room_name!r} by user id={created_by_user_id}")
+    def create_room(self, created_by_user_id: int) -> Room:
+        logger.debug(f"Creating room by {created_by_user_id}")
         room_id = random.randbytes(4).hex()
 
         room = Room(
             id=room_id,
             short_code=int(room_id, 16) % 10_000,
-            name=room_name,
             manager_user_id=created_by_user_id,
         )
 
@@ -43,7 +42,7 @@ class DatabaseRepository:
             return room
 
     def assign_targets(self, room_id: str, user_target_pairs: list[tuple[int, int]]):
-        logger.debug(f"Adding targets in room {room_id=}: {user_target_pairs=}")
+        logger.debug(f"Adding targets in {room_id=}: {user_target_pairs=}")
         with self.session() as s:
             targets = [
                 Target(room_id=room_id, user_id=u_id, target_user_id=t_id)
@@ -54,7 +53,7 @@ class DatabaseRepository:
             logger.debug(f"Added {len(targets)} targets for {room_id=}")
 
     def get_target(self, room_id: str, user_id: int) -> User:
-        logger.debug(f"Getting target in room {room_id=} for user {user_id=}")
+        logger.debug(f"Getting target in {room_id=} for {user_id=}")
         with self.session() as s:
             target = (
                 s.query(Target)
@@ -67,7 +66,7 @@ class DatabaseRepository:
         if target is None:
             raise TargetNotAssigned(f"User {user_id=} has no target in room {room_id=}")
         target_user = self.get_user(user_id=target.target_user_id)
-        logger.debug(f"Got target {target_user} in room {room_id=} for user {user_id=}")
+        logger.debug(f"Got {target_user=} in room {room_id=} for user {user_id=}")
         return target_user
 
     def get_room_by_short_code(self, short_code: int) -> Room:
@@ -98,20 +97,20 @@ class DatabaseRepository:
             s.add(user)
             s.commit()
             s.refresh(user)
-            logger.debug(f"Created user {user}")
+            logger.debug(f"Created {user=}")
             return user
 
     def get_room(self, room_id: str) -> Room:
-        logger.debug(f"Getting room {room_id=}")
+        logger.debug(f"Getting {room_id=}")
         with self.session() as s:
             room = s.get(Room, room_id)
         if room is None:
             raise RoomNotFound(f"Room {room_id=} not found")
-        logger.debug(f"Got {room}")
+        logger.debug(f"Got {room=}")
         return room
 
     def get_user(self, user_id: int) -> User:
-        logger.debug(f"Getting user {user_id=}")
+        logger.debug(f"Getting {user_id=}")
         with self.session() as s:
             user = s.get(User, user_id)
         if user is None:
@@ -120,31 +119,23 @@ class DatabaseRepository:
         return user
 
     def get_rooms_managed_by_user(self, user_id: int) -> list[Room]:
-        logger.debug(f"Getting rooms managed by user {user_id=}")
+        logger.debug(f"Getting rooms managed by {user_id=}")
         # raises UserNotFound
         _ = self.get_user(user_id=user_id)  # raises if not found
 
         with self.session() as s:
             rooms = s.query(Room).filter(Room.manager_user_id == user_id).all()  # type: ignore[arg-type]
-        logger.debug(f"Got rooms managed by user {user_id=}: {rooms}")
+        logger.debug(f"Got rooms managed by {user_id=}: {rooms}")
         return rooms
 
-    def get_active_rooms_managed_by_user(self, user_id: int) -> list[Room]:
-        logger.debug(f"Getting active rooms managed by user {user_id=}")
-        # raises UserNotFound
-        all_rooms = self.get_rooms_managed_by_user(user_id=user_id)
-        managed_rooms = [room for room in all_rooms if room.is_active()]
-        logger.debug(f"Got active rooms managed by user {user_id=}: {managed_rooms}")
-        return managed_rooms
-
     def get_users_in_room(self, room_id: str) -> list[User]:
-        logger.debug(f"Getting users in room {room_id=}")
+        logger.debug(f"Getting users in {room_id=}")
         # raises RoomNotFound
         _ = self.get_room(room_id=room_id)  # raises if not found
 
         with self.session() as s:
             users = s.query(User).filter(User.room_id == room_id).all()  # type: ignore[arg-type]
-        logger.debug(f"Got users in room {room_id=}: {users}")
+        logger.debug(f"Got users in {room_id=}: {users}")
         return users
 
     def join_room(self, user_id: int, room_id: str):
@@ -170,17 +161,17 @@ class DatabaseRepository:
                 raise RoomNotFound(f"Room with {room_id=} not found")
             s.delete(room)
             s.commit()
-            logger.debug(f"Deleted {room}")
+            logger.debug(f"Deleted {room=}")
 
     def leave_room(self, user_id: int) -> Room:
-        logger.debug(f"User id={user_id} leaving room")
+        logger.debug(f"User {user_id=} leaving room")
         # raises UserNotFound, NotInRoom
         with self.session() as s:
             user = s.get(User, user_id)
             if user is None:
-                raise UserNotFound(f"User with id={user_id} not found")
+                raise UserNotFound(f"User {user_id=} not found")
             if (room_id := user.room_id) is None:
-                raise NotInRoom(f"User id={user_id} is not in any room")
+                raise NotInRoom(f"User {user_id=} is not in any room")
             room = self.get_room(room_id)
             user.room_id = None
             s.commit()
@@ -193,13 +184,13 @@ class DatabaseRepository:
         with self.session() as s:
             user = s.get(User, user_id)
             if user is None:
-                raise UserNotFound(f"User with id={user_id} not found")
+                raise UserNotFound(f"User {user_id=} not found")
             user.name = name
             s.commit()
             logger.debug(f"Set {user_id=} {name=}")
 
     def set_game_started(self, room_id: str, started_dt: DateTime):
-        logger.debug(f"Setting game started dt for room {room_id=} to {started_dt=}")
+        logger.debug(f"Setting game started_dt for {room_id=} to {started_dt=}")
         # raises RoomNotFound
         with self.session() as s:
             room = s.get(Room, room_id)
@@ -210,16 +201,12 @@ class DatabaseRepository:
             logger.debug(f"Set game started dt for room {room_id=} to {started_dt=}")
 
     def set_game_completed(self, room_id: str, completed_dt: DateTime):
-        logger.debug(
-            f"Setting game completed_dt for room {room_id=} to {completed_dt=}"
-        )
+        logger.debug(f"Setting game completed_dt for {room_id=} to {completed_dt=}")
         # raises RoomNotFound
         with self.session() as s:
             room = s.get(Room, room_id)
             if room is None:
-                raise RoomNotFound(f"Room with {room_id=} not found")
+                raise RoomNotFound(f"Room {room_id=} not found")
             room.completed_dt = completed_dt
             s.commit()
-            logger.debug(
-                f"Set game completed_dt for room {room_id=} to {completed_dt=}"
-            )
+            logger.debug(f"Set game completed_dt for {room_id=} to {completed_dt=}")

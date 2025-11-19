@@ -58,7 +58,7 @@ class TestNameCallback:
 
         # THEN
         text_mock.assert_called_once_with(message)
-        moroz_mock.update_name.assert_called_once_with(user_mock, "Someone")
+        moroz_mock.update_name.assert_called_once_with(user_mock.id, "Someone")
         bot_mock.send_message.assert_called_once_with(
             user_mock.id,
             "Your name has been set to 'Someone'.",

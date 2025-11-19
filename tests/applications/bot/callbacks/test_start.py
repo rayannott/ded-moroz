@@ -64,5 +64,7 @@ class TestStartCallback:
         bot_mock.send_message.assert_called_once_with(
             12345, "Welcome, TestUser42! You have been registered."
         )
-        moroz_mock.create_user.assert_called_once_with(user_mock)
+        moroz_mock.create_user.assert_called_once_with(
+            user_mock.id, user_mock.username, user_mock.name
+        )
         assert "/start from this-usr" in caplog.text

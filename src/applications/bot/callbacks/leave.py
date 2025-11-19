@@ -11,7 +11,7 @@ class LeaveCallback(Callback):
     def process(self, user: User, *, message: types.Message):
         logger.info(f"/leave from {user}")
         try:
-            left_room = self.moroz.leave_room(user)
+            left_room = self.moroz.leave_room(user_id=user.id)
         except NotInRoom:
             self.bot.send_message(
                 user.id,

@@ -3,6 +3,8 @@ from unittest import mock
 import pytest
 
 from src.applications.bot.callbacks.management.delete import DeleteCallback
+from src.models.room import Room
+from src.models.user import User
 from src.repositories.database import DatabaseRepository
 from src.shared.exceptions import RoomNotFound
 from tests.utils import Regex
@@ -27,19 +29,15 @@ class TestRoomDeletedNotifyMembers:
     def test_delete_notify_members(
         self,
         delete_callback: DeleteCallback,
-        message_factory,
+        create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
         bot_mock,
     ):
         # GIVEN
-        manager = database_repo.create_user(id=201, username="manager", name="Manager")
+        manager, room = create_manager_room
         member1 = database_repo.create_user(id=202, username="member1", name="Member1")
         member2 = database_repo.create_user(id=203, username="member2", name="Member2")
 
-        room = database_repo.create_room(
-            created_by_user_id=manager.id,
-            room_name="Test Room",
-        )
         database_repo.join_room(user_id=member1.id, room_id=room.id)
         database_repo.join_room(user_id=member2.id, room_id=room.id)
 

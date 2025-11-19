@@ -8,7 +8,6 @@ from sqlmodel import Column, DateTime, Field, Integer, SQLModel
 class Room(SQLModel, table=True):  # type: ignore[call-arg]
     id: str = Field(primary_key=True, description="Room ID (hex string)")
     short_code: int = Field(sa_column=Column(Integer, nullable=False, index=True))
-    name: str = Field(nullable=False)
 
     manager_user_id: int = Field(foreign_key="user.id", nullable=False)
 
@@ -23,6 +22,7 @@ class Room(SQLModel, table=True):  # type: ignore[call-arg]
         default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
 
+    @property
     def is_active(self) -> bool:
         return self.completed_dt is None
 

@@ -14,7 +14,7 @@ class StartCallback(Callback):
         return self.process(user_from_message(message), message=message)
 
     def _create_user(self, user: User):
-        new_user = self.moroz.create_user(user)
+        new_user = self.moroz.create_user(user.id, user.username, user.name)
         self.bot.send_message(
             new_user.id,
             f"Welcome, {new_user.display_name}! You have been registered.",
@@ -27,7 +27,7 @@ class StartCallback(Callback):
         logger.info(f"/start from {user}")
 
         try:
-            this_user = self.moroz.get_user(user)
+            this_user = self.moroz.get_user(user.id)
             self._greet_again(this_user)
         except UserNotFound:
             self._create_user(user)

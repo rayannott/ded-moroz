@@ -49,8 +49,7 @@ class JoinCallback(Callback):
 
         try:
             joined_room = self.moroz.join_room_by_short_code(
-                user=user,
-                room_short_code=room_short_code,
+                user_id=user.id, room_short_code=room_short_code
             )
         except RoomNotFound:
             self.bot.send_message(

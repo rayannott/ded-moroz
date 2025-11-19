@@ -8,5 +8,5 @@ from src.models.user import User
 class MeCallback(Callback):
     def process(self, user: User, *, message: types.Message):
         logger.info(f"/me from {user}")
-        msg = self.moroz.get_user_information(user)
+        msg = self.moroz.get_user_information(user.id)
         self.bot.send_message(user.id, msg)

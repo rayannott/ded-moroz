@@ -32,39 +32,24 @@ class TestJoinRoom:
     def join_callback(self, bot_mock, moroz_integrated) -> JoinCallback:
         return JoinCallback(bot=bot_mock, moroz=moroz_integrated)
 
-    @pytest.fixture
-    def create_user_room(self, database_repo: DatabaseRepository, user_mock: User):
-        created_user = database_repo.create_user(
-            user_mock.id, user_mock.username, user_mock.name
-        )
-        created_room = database_repo.create_room(
-            created_by_user_id=created_user.id,
-            room_name="Test Room",
-        )
-        this_user = database_repo.get_user(created_user.id)
-        return this_user, created_room
-
     def test_join_ok(
         self,
         join_callback: JoinCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
-        user_mock: User,
+        create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
-        this_user, created_room = create_user_room
+        this_user, created_room = create_manager_room
         message = message_factory(text="/join")
 
         # WHEN (user initiates join)
         join_callback.process(this_user, message=message)
 
         # THEN
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         assert callback_fn == join_callback._handle_room_code_entered
 
         # WHEN (user enters room code)
@@ -90,23 +75,21 @@ class TestJoinRoom:
         self,
         join_callback: JoinCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         user_mock: User,
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
-        this_user, created_room = create_user_room
+        this_user, created_room = create_manager_room
         message = message_factory(text="/join")
 
         # WHEN (user initiates join)
         join_callback.process(this_user, message=message)
 
         # THEN
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         assert callback_fn == join_callback._handle_room_code_entered
 
         # WHEN (user enters invalid room code)
@@ -125,23 +108,21 @@ class TestJoinRoom:
         self,
         join_callback: JoinCallback,
         message_factory,
-        create_user_room: tuple[User, Room],
+        create_manager_room: tuple[User, Room],
         user_mock: User,
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
     ):
         # GIVEN
-        this_user, created_room = create_user_room
+        this_user, created_room = create_manager_room
         message = message_factory(text="/join")
 
         # WHEN (user initiates join)
         join_callback.process(this_user, message=message)
 
         # THEN
-        _, (_answer, callback_fn), _kwargs = (
-            bot_mock.register_next_step_handler.mock_calls[0]
-        )
+        _, (_, callback_fn), _ = bot_mock.register_next_step_handler.mock_calls[0]
         assert callback_fn == join_callback._handle_room_code_entered
 
         # WHEN (user enters non-existing room code)

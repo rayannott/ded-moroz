@@ -26,7 +26,6 @@ class TestCreateCallback:
         # THEN
         moroz_mock.create_room.assert_called_once_with(
             created_by_user_id=user_mock.id,
-            room_name="New Room",
         )
         bot_mock.send_message.assert_called_once_with(
             user_mock.id,
@@ -51,7 +50,6 @@ class TestCreateCallback:
         # THEN
         moroz_mock.create_room.assert_called_once_with(
             created_by_user_id=user_mock.id,
-            room_name="New Room",
         )
         bot_mock.send_message.assert_called_once_with(
             user_mock.id,

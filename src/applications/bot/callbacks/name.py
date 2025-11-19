@@ -25,7 +25,7 @@ class NameCallback(Callback):
         logger.debug(f"Setting name for {user} to {new_name!r}")
 
         try:
-            self.moroz.update_name(user, new_name)
+            self.moroz.update_name(user.id, new_name)
         except InvalidName as e:
             self.bot.send_message(
                 user.id,
