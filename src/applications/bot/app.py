@@ -1,8 +1,8 @@
 import telebot
 from loguru import logger
 
-from src.services.moroz import Moroz
 from src.applications.bot.callbacks_manager import CallbacksManager
+from src.services.moroz import Moroz
 
 
 class BotApp:
@@ -10,15 +10,11 @@ class BotApp:
         self.api_token = api_token
         self.moroz = moroz
 
-        self.bot = self.create_bot()
+        self.bot = telebot.TeleBot(self.api_token)
         self.callbacks_manager = CallbacksManager(self.bot, self.moroz)
         self.callbacks_manager.register_callbacks(self.bot)
 
-    def create_bot(self) -> telebot.TeleBot:
-        bot = telebot.TeleBot(self.api_token)
-        return bot
-
     def run(self):
         logger.info("Bot started")
-        self.bot.polling()
+        self.bot.infinity_polling()
         logger.info("Bot stopped")

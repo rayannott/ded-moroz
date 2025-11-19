@@ -19,7 +19,8 @@ class PlayCallback(ManagementCallback):
             )
             self.bot.send_message(
                 user.id,
-                "Cannot start the game: not enough players in the room (need at least 2).",
+                "Cannot start the game: not enough players in "
+                f"the room (need at least {self.moroz.min_players_to_start_game}).",
                 reply_markup=remove_keyboard(),
             )
             return
