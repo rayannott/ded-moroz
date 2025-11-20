@@ -14,6 +14,7 @@ from src.shared.exceptions import (
     InvalidName,
     MaxNumberOfRoomsReached,
     RoomTooSmall,
+    TargetNotAssigned,
 )
 from src.shared.utils import is_name_valid
 
@@ -212,6 +213,13 @@ class Moroz:
         room = self.database_repository.get_room(user.room_id)
 
         lines.append("You are in " + self.get_room_information(room.id))
+
+        # if the game has started, show the target
+        try:
+            target_user = self.database_repository.get_target(room.id, user.id)
+            lines.append(f"Your target is: {target_user.formal_display_name} 🎁")
+        except TargetNotAssigned:
+            pass
 
         msg = "\n".join(lines)
         logger.success(f"Got information about {user=}")

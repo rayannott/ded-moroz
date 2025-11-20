@@ -17,7 +17,7 @@ class StartCallback(Callback):
         new_user = self.moroz.create_user(user.id, user.username, user.name)
         self.bot.send_message(
             new_user.id,
-            f"Welcome, {new_user.display_name}! You have been registered.",
+            f"Welcome, {new_user.display_name}! You have been registered. /help may be useful to get started.",
         )
 
     def _greet_again(self, user: User):

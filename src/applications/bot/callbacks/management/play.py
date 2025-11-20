@@ -36,7 +36,9 @@ class PlayCallback(ManagementCallback):
         participants = ", ".join(u.formal_display_name for u, _ in target_pairs)
         self.bot.send_message(
             user.id,
-            f"The game in room {room.display_short_code} has started! All participants ({participants}) have been notified privately.",
+            f"The game in room {room.display_short_code} has started! "
+            f"All participants ({participants}) have been notified privately. "
+            "Note that you may want to complete this game later under /manage.",
             reply_markup=remove_keyboard(),
         )
         logger.debug(f"Game started in room {room} by user {user}")
