@@ -52,7 +52,6 @@ class TestGetUserInformation:
     ):
         # GIVEN: manager created a room but is not joined to it (no room_id)
         manager, _ = create_manager_room
-        # NOTE: we intentionally do NOT call join_room for the manager here
 
         # WHEN
         me_callback.process(manager, message=message_factory())
@@ -147,6 +146,70 @@ class TestGetUserInformation:
                         r".+Active rooms you manage: \d{4}"
                         r".+You are in Room \d{4}"
                         r".+managed by: Manager1.+",
+                        flags=re.DOTALL,
+                    ),
+                ),
+            ],
+        )
+
+    def test_display_target_in_started_game(
+        self,
+        me_callback: MeCallback,
+        bot_mock,
+        database_repo: DatabaseRepository,
+        message_factory,
+        create_manager_room: tuple[User, Room],
+    ):
+        # GIVEN
+        manager, room = create_manager_room
+        database_repo.join_room(manager.id, room.id)
+        p1 = database_repo.create_user(id=406, username="participant1", name="P1")
+        p2 = database_repo.create_user(id=407, username="participant2", name="P2")
+        database_repo.join_room(p1.id, room.id)
+        database_repo.join_room(p2.id, room.id)
+        p1 = database_repo.get_user(p1.id)
+        p2 = database_repo.get_user(p2.id)
+        room = database_repo.get_room(room.id)
+
+        # WHEN
+        me_callback.process(p1, message=message_factory())
+
+        # THEN ("Your target is: ..." not included in the message)
+        bot_mock.send_message.assert_called_once_with(
+            p1.id,
+            Regex(
+                r"You are P1.+!" r".+game status: not started yet\.",
+                flags=re.DOTALL,
+            ),
+        )
+
+        # WHEN
+        bot_mock.reset_mock()
+        me_callback.moroz.start_game_in_room(room.id)  # start game
+        me_callback.process(p1, message=message_factory())
+        me_callback.process(manager, message=message_factory())
+
+        # THEN: includes "Your target is: ..."
+        bot_mock.send_message.assert_has_calls(
+            [
+                mock.call(
+                    p1.id,
+                    Regex(
+                        r"You are P1.+!"
+                        r".+You are in Room \d{4}"
+                        r".+managed by: Manager"
+                        r".+Your target is: .+ 🎁",
+                        flags=re.DOTALL,
+                    ),
+                ),
+                mock.call(
+                    manager.id,
+                    Regex(
+                        r"You are Manager.+!"
+                        r".+Active rooms you manage: \d{4}"
+                        r".+You are in Room \d{4}"
+                        r".+managed by: Manager"
+                        r".+Your target is: .+ 🎁",
                         flags=re.DOTALL,
                     ),
                 ),

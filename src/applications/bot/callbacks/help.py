@@ -4,9 +4,11 @@ from telebot import types
 from src.applications.bot.callbacks.base import Callback
 from src.models.user import User
 
-HELP_MESSAGE = """Welcome to the Moroz Bot!
-Something you may want to know to play:
-/create, /join yourself using the code (and invite others), /manage to start (among other things) and complete.
+HELP_MESSAGE = """Welcome to the Secret Santa Bot!
+To start with,
+/create a room,
+/join using the four-digit code (and invite others),
+/manage to start (among other things).
 
 Available commands:
 /help - show this help message
@@ -17,6 +19,8 @@ Available commands:
 /create - create a new room
 /manage - manage room(s) you created (if any): see info, kick players, start/complete game, or delete
 /leave - leave the current room (if any)
+
+Feel free to share feedback with me (@rayannott).
 """
 
 

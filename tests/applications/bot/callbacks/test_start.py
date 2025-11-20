@@ -6,6 +6,7 @@ from pytest_loguru.plugin import caplog  # noqa: F401
 
 from src.applications.bot.callbacks.start import StartCallback
 from src.shared.exceptions import UserNotFound
+from tests.utils import Regex
 
 
 class TestStartCallback:
@@ -62,7 +63,7 @@ class TestStartCallback:
         # THEN
         user_from_message_patched.assert_called_once_with(message_mock)
         bot_mock.send_message.assert_called_once_with(
-            12345, "Welcome, TestUser42! You have been registered."
+            12345, Regex(r"Welcome, TestUser42! .+registered.+")
         )
         moroz_mock.create_user.assert_called_once_with(
             user_mock.id, user_mock.username, user_mock.name
