@@ -1,3 +1,4 @@
+from datetime import timezone
 from loguru import logger
 from pydantic_extra_types.pendulum_dt import DateTime
 from telebot import types
@@ -20,9 +21,7 @@ class HereCallback(Callback):
         logger.info(f"/here from {user}")
         if self._option_join_just_created_room(user):
             logger.info(f"User {user} joined just created room")
-            self.bot.send_message(
-                user.id, "You have been joined to the room you just created."
-            )
+            self.bot.send_message(user.id, "You have joined the room you just created.")
         else:
             logger.info(f"Couldn't determine what to do with /here from {user}")
             self.bot.send_message(
@@ -45,9 +44,12 @@ class HereCallback(Callback):
             logger.debug(f"User {user} does not manage any active rooms")
             return False
         latest_room = max(active_managed_rooms, key=lambda r: r.created_dt)
-        now = DateTime.now()
-        created_dt = DateTime.fromisoformat(latest_room.created_dt.isoformat())
-        if (now - created_dt).in_minutes() > 1:
+        # TODO make tz in sqlmodel models timezone aware
+        now = DateTime.utcnow()
+        created_dt = DateTime.fromisoformat(
+            latest_room.created_dt.isoformat()
+        ).astimezone(timezone.utc)
+        if (now - created_dt).seconds > 60:
             logger.debug(
                 f"Latest room {latest_room} for user {user} was created more than 1 minute ago"
             )
