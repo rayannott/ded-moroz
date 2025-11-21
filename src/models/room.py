@@ -1,8 +1,10 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import AwareDatetime
-from pydantic_extra_types.pendulum_dt import DateTime as Dt
-from sqlmodel import Column, DateTime, Field, Integer, SQLModel
+from sqlmodel import Column, Field, Integer, SQLModel
+
+from src.models._types import UTCDateTime
 
 
 class Room(SQLModel, table=True):  # type: ignore[call-arg]
@@ -12,14 +14,14 @@ class Room(SQLModel, table=True):  # type: ignore[call-arg]
     manager_user_id: int = Field(foreign_key="user.id", nullable=False)
 
     created_dt: AwareDatetime = Field(
-        sa_column=Column(DateTime(timezone=True), nullable=False),
-        default_factory=Dt.utcnow,
+        sa_column=Column(UTCDateTime(), nullable=False),
+        default_factory=lambda: datetime.now(timezone.utc),
     )
     started_dt: Optional[AwareDatetime] = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(UTCDateTime(), nullable=True)
     )
     completed_dt: Optional[AwareDatetime] = Field(
-        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+        default=None, sa_column=Column(UTCDateTime(), nullable=True)
     )
 
     @property

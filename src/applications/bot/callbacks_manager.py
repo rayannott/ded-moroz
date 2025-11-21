@@ -6,13 +6,14 @@ from telebot import types
 from src.applications.bot.callbacks.create import CreateCallback
 from src.applications.bot.callbacks.echo import EchoCallback
 from src.applications.bot.callbacks.help import HelpCallback
+from src.applications.bot.callbacks.here import HereCallback
+from src.applications.bot.callbacks.history import HistoryCallback
 from src.applications.bot.callbacks.join import JoinCallback
 from src.applications.bot.callbacks.leave import LeaveCallback
 from src.applications.bot.callbacks.management.manage import ManageCallback
 from src.applications.bot.callbacks.me import MeCallback
 from src.applications.bot.callbacks.name import NameCallback
 from src.applications.bot.callbacks.start import StartCallback
-from src.applications.bot.callbacks.history import HistoryCallback
 from src.services.moroz import Moroz
 
 
@@ -59,6 +60,10 @@ class CallbacksManager:
         @bot.message_handler(commands=["history"])
         def history_handler(message: types.Message):
             HistoryCallback(self.bot, self.moroz).process_wrap(message)
+
+        @bot.message_handler(commands=["here"])
+        def here_handler(message: types.Message):
+            HereCallback(self.bot, self.moroz).process_wrap(message)
 
         @bot.message_handler(func=lambda message: True)
         def echo_handler(message: types.Message):

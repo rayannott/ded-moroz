@@ -26,6 +26,9 @@ class Moroz:
     database_repository: DatabaseRepository
     max_rooms_managed_by_user: int
     min_players_to_start_game: int
+    admin_name: str | None = None
+    admin_username: str | None = None
+    admin_user_id: int | None = None
 
     def create_room(self, created_by_user_id: int) -> Room:
         """Create a new room managed by the given user
@@ -139,9 +142,9 @@ class Moroz:
         logger.success(f"Game completed in {room_id=}")
         return users_in_room
 
-    def get_rooms_managed_by_user(self, user: User) -> list[Room]:
-        logger.info(f"Getting rooms managed by {user}")
-        return self.database_repository.get_rooms_managed_by_user(user.id)
+    def get_rooms_managed_by_user(self, user_id: int) -> list[Room]:
+        logger.info(f"Getting rooms managed by {user_id=}")
+        return self.database_repository.get_rooms_managed_by_user(user_id)
 
     def create_user(self, user_id: int, username: str | None, name: str | None) -> User:
         logger.info(

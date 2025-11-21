@@ -1,5 +1,8 @@
+import subprocess
 from itertools import batched
+from typing import NamedTuple
 
+from loguru import logger
 from telebot import types
 
 from src.models.user import User
@@ -28,3 +31,41 @@ def user_from_message(message: types.Message) -> User:
         name=message.chat.first_name,
         username=message.chat.username,
     )
+
+
+class GitInfo(NamedTuple):
+    branch_name: str
+    commit_hash: str
+    commit_message: str
+
+    def __str__(self) -> str:
+        return (
+            f"Branch: {self.branch_name}\n"
+            f"Commit: {self.commit_hash}\n"
+            f"Message: {self.commit_message}"
+        )
+
+
+def get_git_info() -> GitInfo | None:
+    def _output(cmd: list[str]) -> str:
+        return (
+            subprocess.check_output(
+                cmd,
+                stderr=subprocess.STDOUT,
+            )
+            .decode("utf-8")
+            .strip()
+        )
+
+    try:
+        commit_hash = _output(["git", "rev-parse", "--short", "HEAD"])
+        branch_name = _output(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        commit_message = _output(["git", "log", "-1", "--pretty=%B"])
+        return GitInfo(
+            branch_name=branch_name,
+            commit_hash=commit_hash,
+            commit_message=commit_message,
+        )
+    except Exception as e:
+        logger.warning(f"Failed to get git info: {e}")
+        return None

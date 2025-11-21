@@ -48,7 +48,7 @@ class ManageCallback(Callback):
     def process(self, user: User, *, message: types.Message):
         logger.info(f"/manage from {user}")
 
-        managed_rooms = self.moroz.get_rooms_managed_by_user(user)
+        managed_rooms = self.moroz.get_rooms_managed_by_user(user.id)
         active_managed_rooms = [room for room in managed_rooms if room.is_active]
 
         if not active_managed_rooms:
