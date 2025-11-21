@@ -10,6 +10,7 @@ from src.shared.exceptions import GameAlreadyCompleted, GameAlreadyStarted, Room
 
 class JoinCallback(Callback):
     def process(self, user: User, *, message: types.Message):
+        logger.info(f"/join from {user}")
         if user.room_id is not None:
             room = self.moroz.get_room(user.room_id)
             self.bot.send_message(

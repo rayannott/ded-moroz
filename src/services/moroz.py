@@ -139,9 +139,9 @@ class Moroz:
         logger.success(f"Game completed in {room_id=}")
         return users_in_room
 
-    def get_rooms_managed_by_user(self, user: User) -> list[Room]:
-        logger.info(f"Getting rooms managed by {user}")
-        return self.database_repository.get_rooms_managed_by_user(user.id)
+    def get_rooms_managed_by_user(self, user_id: int) -> list[Room]:
+        logger.info(f"Getting rooms managed by {user_id=}")
+        return self.database_repository.get_rooms_managed_by_user(user_id)
 
     def create_user(self, user_id: int, username: str | None, name: str | None) -> User:
         logger.info(
