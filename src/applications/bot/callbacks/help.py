@@ -18,16 +18,25 @@ Available commands:
 /me - show info about yourself (name, username, current room, etc.)
 /create - create a new room
 /manage - manage room(s) you created (if any): see info, kick players, start/complete game, or delete
-/leave - leave the current room (if any)
-
-Feel free to share feedback with me (@rayannott).
+/leave - leave the current room (if any){admin_info}
 """
 
 
 class HelpCallback(Callback):
     def process(self, user: User, *, message: types.Message):
         logger.info(f"/help from {user}")
+        _admin_contact = (
+            f"{self.moroz.admin_name} (@{self.moroz.admin_username})"
+            if self.moroz.admin_name and self.moroz.admin_username
+            else (f"@{self.moroz.admin_username}" if self.moroz.admin_username else "")
+        )
         self.bot.send_message(
             user.id,
-            HELP_MESSAGE,
+            HELP_MESSAGE.format(
+                admin_info=(
+                    f"\n\nFeel free to share feedback with me: {_admin_contact}."
+                    if _admin_contact
+                    else ""
+                ),
+            ),
         )

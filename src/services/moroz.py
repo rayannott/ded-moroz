@@ -26,6 +26,9 @@ class Moroz:
     database_repository: DatabaseRepository
     max_rooms_managed_by_user: int
     min_players_to_start_game: int
+    admin_name: str | None = None
+    admin_username: str | None = None
+    admin_user_id: int | None = None
 
     def create_room(self, created_by_user_id: int) -> Room:
         """Create a new room managed by the given user
