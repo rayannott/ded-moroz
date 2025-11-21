@@ -19,11 +19,13 @@ class CreateCallback(Callback):
             )
             return
 
+        _here_part = "; please click /here to enter" if user.room_id is None else ""
+
         self.bot.send_message(
             user.id,
             rf"""Room created successfully\! 🎉
 This room ID: `{room.display_short_code}` \(share this with your friends\)\.
-Note that you are not automatically joined to the room; please click /here to enter\.
+Note that you are not automatically joined to the room{_here_part}\.
 Use /manage to view info, manage, or delete your rooms\.""",
             parse_mode="MarkdownV2",
         )
