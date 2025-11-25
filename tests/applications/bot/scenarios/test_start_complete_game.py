@@ -45,12 +45,15 @@ class TestStartCompleteGame:
     def complete_game_callback(self, bot_mock, moroz_integrated) -> CompleteCallback:
         return CompleteCallback(bot=bot_mock, moroz=moroz_integrated)
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_try_start_game_lonely_manager(
         self,
         start_game_callback: PlayCallback,
         database_repo: DatabaseRepository,
         create_manager_room: tuple[User, Room],
+        message_factory,
         bot_mock,
+        prompt_response: str,
     ):
         # GIVEN
         manager, room = create_manager_room
@@ -61,12 +64,28 @@ class TestStartCompleteGame:
         start_game_callback.process_management(manager, room)
 
         # THEN
-        bot_mock.send_message.assert_called_once_with(
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        assert callback_fn == start_game_callback._confirm_start
+
+        # WHEN
+        callback_fn(message_factory(text=prompt_response), manager, room)
+
+        # THEN
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager.id,
+                f"Game start in room {room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
+        bot_mock.send_message.assert_called_with(
             manager.id,
             Regex("Cannot start the game.+not enough players.+"),
             reply_markup=mock.ANY,
         )
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_start_game_in_room(
         self,
         start_game_callback: PlayCallback,
@@ -75,6 +94,7 @@ class TestStartCompleteGame:
         database_repo: DatabaseRepository,
         bot_mock,
         caplog: LogCaptureFixture,  # noqa: F811
+        prompt_response: str,
     ):
         # GIVEN
         manager, room = create_manager_room
@@ -94,6 +114,22 @@ class TestStartCompleteGame:
         start_game_callback.process_management(manager, room)
 
         # THEN
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        assert callback_fn == start_game_callback._confirm_start
+
+        # WHEN
+        callback_fn(message_factory(text=prompt_response), manager, room)
+
+        # THEN
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager.id,
+                f"Game start in room {room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
+
         room_after = database_repo.get_room(room.id)
         assert room_after.started_dt is not None
         assert room_after.completed_dt is None
@@ -129,6 +165,7 @@ class TestStartCompleteGame:
         assert len(targets) == len(players)
         assert {t.id for t in targets} == {player.id for player in players}
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_manager_plays_duet(
         self,
         start_game_callback: PlayCallback,
@@ -136,6 +173,7 @@ class TestStartCompleteGame:
         message_factory,
         database_repo: DatabaseRepository,
         bot_mock,
+        prompt_response: str,
     ):
         # GIVEN
         manager, room = create_manager_room
@@ -147,6 +185,20 @@ class TestStartCompleteGame:
         # WHEN
         start_game_callback.process_management(manager, room)
         # THEN
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        assert callback_fn == start_game_callback._confirm_start
+
+        # WHEN
+        callback_fn(message_factory(text=prompt_response), manager, room)
+        # THEN
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager.id,
+                f"Game start in room {room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
         room_after = database_repo.get_room(room.id)
         assert room_after.started_dt is not None
         assert room_after.completed_dt is None
@@ -168,6 +220,7 @@ class TestStartCompleteGame:
         assert managers_target.id == player.id
         assert players_target.id == manager.id
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_complete_game_in_room(
         self,
         start_game_callback: PlayCallback,
@@ -175,6 +228,7 @@ class TestStartCompleteGame:
         message_factory,
         database_repo: DatabaseRepository,
         bot_mock,
+        prompt_response: str,
     ):
         # GIVEN
         manager = database_repo.create_user(id=501, username="manager", name="Manager")
@@ -193,19 +247,34 @@ class TestStartCompleteGame:
 
         # Start the game first
         start_game_callback.process_management(manager, room)
+        # THEN
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        assert callback_fn == start_game_callback._confirm_start
+        # WHEN
+        callback_fn(message_factory(text=prompt_response), manager, room)
+        # THEN (cancelled)
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager.id,
+                f"Game start in room {room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
 
         # WHEN: complete the game
         complete_game_callback.process_management(manager, room)
-        # THEN
+
+        # THEN (completed)
         room_after = database_repo.get_room(room.id)
         assert room_after.started_dt is not None
         assert room_after.completed_dt is not None
 
         calls = [
-            mock.call.send_message(
+            mock.call(
                 manager.id,
                 Regex(r".+game.+completed successfully.+"),
                 reply_markup=mock.ANY,
             )
         ]
-        bot_mock.assert_has_calls(calls, any_order=True)
+        bot_mock.send_message.assert_has_calls(calls, any_order=True)

@@ -26,12 +26,15 @@ class TestRoomDeletedNotifyMembers:
     def delete_callback(self, bot_mock, moroz_integrated) -> DeleteCallback:
         return DeleteCallback(bot=bot_mock, moroz=moroz_integrated)
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_delete_notify_members(
         self,
         delete_callback: DeleteCallback,
         create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
+        message_factory,
         bot_mock,
+        prompt_response: str,
     ):
         # GIVEN
         manager, room = create_manager_room
@@ -46,6 +49,22 @@ class TestRoomDeletedNotifyMembers:
         delete_callback.process_management(manager, room)
 
         # THEN
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        assert callback_fn == delete_callback._confirm_deletion
+
+        # WHEN
+        callback_fn(message_factory(text=prompt_response), manager, room)
+
+        # THEN
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager.id,
+                f"Room deletion for {room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
+
         with pytest.raises(RoomNotFound):
             database_repo.get_room(room.id)
 
@@ -67,4 +86,4 @@ class TestRoomDeletedNotifyMembers:
             )
         )
         bot_mock.send_message.assert_has_calls(calls, any_order=True)
-        assert bot_mock.send_message.call_count == 3
+        assert bot_mock.send_message.call_count == 4
