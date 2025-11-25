@@ -104,7 +104,7 @@ class TestCreateJoinLeaveDelete:
         assert "joining room with code" in caplog.text
         successful_join_call = mock.call(
             this_user.id,
-            Regex(".+successfully joined the room.+"),
+            Regex(".+successfully joined the.+", flags=re.DOTALL),
         )
         successful_join_call_manager = mock.call(
             this_user.id,
