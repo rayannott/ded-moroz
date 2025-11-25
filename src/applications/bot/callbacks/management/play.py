@@ -1,7 +1,8 @@
 from loguru import logger
+from telebot import types
 
 from src.applications.bot.callbacks.management.base import ManagementCallback
-from src.applications.bot.utils import remove_keyboard
+from src.applications.bot.utils import remove_keyboard, get_keyboard, text
 from src.models.room import Room
 from src.models.user import User
 from src.shared.exceptions import RoomTooSmall
@@ -10,6 +11,26 @@ from src.shared.exceptions import RoomTooSmall
 class PlayCallback(ManagementCallback):
     def process_management(self, user: User, room: Room):
         logger.info(f"Play action chosen by {user} in {room}")
+        kb = get_keyboard(["Confirm", "Cancel"])
+        room_info = self.moroz.get_room_information(room.id)
+        answer = self.bot.send_message(
+            user.id,
+            f"The {room_info} "
+            "\nwill start the game and notify all participants of their targets. "
+            "Are you sure you want to proceed?",
+            reply_markup=kb,
+        )
+        self.bot.register_next_step_handler(answer, self._confirm_start, user, room)
+
+    def _confirm_start(self, message: types.Message, user: User, room: Room):
+        if text(message).lower() != "confirm":
+            self.bot.send_message(
+                user.id,
+                f"Game start in room {room.display_short_code} cancelled.",
+                reply_markup=remove_keyboard(),
+            )
+            logger.info(f"Game start in room {room} cancelled by {user}")
+            return
 
         try:
             target_pairs = self.moroz.start_game_in_room(room.id)
