@@ -70,10 +70,12 @@ class JoinCallback(Callback):
                 f"The game in room {room_short_code_str} has already completed. You cannot join now.",
             )
             return
+        
+        room_info = self.moroz.get_room_information(joined_room.id)
 
         self.bot.send_message(
             user.id,
-            f"You have successfully joined the room {room_short_code_str}! 🎉",
+            f"You have successfully joined the {room_info}",
         )
 
         self._notify_manager(user, joined_room)

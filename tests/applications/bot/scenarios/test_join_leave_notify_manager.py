@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 
 import pytest
@@ -98,7 +99,9 @@ class TestJoinLeaveNotifyManager:
 
         calls = [
             mock.call(joiner.id, Regex("Please enter.+")),
-            mock.call(joiner.id, Regex("You have successfully joined the room.+")),
+            mock.call(
+                joiner.id, Regex("You have successfully joined the.+", flags=re.DOTALL)
+            ),
             mock.call(manager.id, Regex("User Joiner.+has joined your room.+")),
             mock.call(joiner.id, Regex("You have successfully left the room.+")),
             mock.call(manager.id, Regex("User Joiner.+has left your room.+")),

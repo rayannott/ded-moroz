@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 
 import pytest
@@ -61,7 +62,7 @@ class TestJoinRoom:
         first_call = mock.call(this_user.id, Regex("Please enter.+"))
         to_the_joinee = mock.call(
             this_user.id,
-            Regex(".+successfully joined the room.+"),
+            Regex(".+successfully joined the.+", flags=re.DOTALL),
         )
         to_the_manager = mock.call(
             this_user.id,
