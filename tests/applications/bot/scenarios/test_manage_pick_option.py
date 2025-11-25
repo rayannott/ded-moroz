@@ -298,6 +298,7 @@ class TestManagePickOption:
             reply_markup=mock.ANY,
         )
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_manage_action_delete_chosen(
         self,
         manage_callback: ManageCallback,
@@ -305,6 +306,7 @@ class TestManagePickOption:
         create_manager_room: tuple[User, Room],
         database_repo: DatabaseRepository,
         bot_mock,
+        prompt_response: str,
     ):
         # GIVEN
         manager_user, created_room = create_manager_room
@@ -314,7 +316,22 @@ class TestManagePickOption:
             user=manager_user,
             room=created_room,
         )
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        answer_message = message_factory(text=prompt_response)
+        callback_fn(
+            answer_message,
+            manager_user,
+            created_room,
+        )
         # THEN
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager_user.id,
+                f"Room deletion for {created_room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
         bot_mock.send_message.assert_called_with(
             manager_user.id,
             Regex(r"Room \d{4}.+deleted.+"),
@@ -342,17 +359,17 @@ class TestManagePickOption:
         )
         # THEN (only checking the call here)
         bot_mock.send_message.assert_called_once_with(
-            manager_user.id,
-            "Select a player to kick:",
-            reply_markup=mock.ANY,
+            manager_user.id, "Select a player to kick:", reply_markup=mock.ANY
         )
 
+    @pytest.mark.parametrize("prompt_response", ["Confirm", "Cancel"])
     def test_manage_action_start_chosen(
         self,
         manage_callback: ManageCallback,
         message_factory,
         create_manager_room: tuple[User, Room],
         bot_mock,
+        prompt_response: str,
     ):
         # GIVEN
         manager_user, created_room = create_manager_room
@@ -362,11 +379,25 @@ class TestManagePickOption:
             user=manager_user,
             room=created_room,
         )
+        _, obj, _ = bot_mock.register_next_step_handler.mock_calls[0]
+        callback_fn = obj[1]
+        answer_message = message_factory(text=prompt_response)
+        callback_fn(
+            answer_message,
+            manager_user,
+            created_room,
+        )
         # THEN
-        bot_mock.send_message.assert_called_once_with(
-            manager_user.id,
-            Regex(".+not enough players.+"),
-            reply_markup=mock.ANY,
+        if prompt_response == "Cancel":
+            bot_mock.send_message.assert_called_with(
+                manager_user.id,
+                f"Game start in room {created_room.display_short_code} cancelled.",
+                reply_markup=mock.ANY,
+            )
+            return
+
+        bot_mock.send_message.assert_called_with(
+            manager_user.id, Regex(".+not enough players.+"), reply_markup=mock.ANY
         )
 
     def test_manage_action_complete_chosen(
