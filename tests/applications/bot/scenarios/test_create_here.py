@@ -52,7 +52,7 @@ class TestCreateHereCallback:
                     Regex(".+created.+here.+", flags=re.DOTALL),
                     parse_mode="MarkdownV2",
                 ),
-                mock.call(user.id, "You have joined the room you just created."),
+                mock.call(user.id, Regex(r"You have joined the room \d{4}.+")),
             ]
         )
         assert "joined just created room" in caplog.text
