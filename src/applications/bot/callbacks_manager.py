@@ -24,47 +24,47 @@ class CallbacksManager:
     bot: telebot.TeleBot
     moroz: Moroz
 
-    def register_callbacks(self, bot: telebot.TeleBot):
-        @bot.message_handler(commands=["start"])
+    def register_callbacks(self):
+        @self.bot.message_handler(commands=["start"])
         def start_handler(message: types.Message):
             StartCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["help"])
+        @self.bot.message_handler(commands=["help"])
         def help_handler(message: types.Message):
             HelpCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["me"])
+        @self.bot.message_handler(commands=["me"])
         def me_handler(message: types.Message):
             MeCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["leave"])
+        @self.bot.message_handler(commands=["leave"])
         def leave_handler(message: types.Message):
             LeaveCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["join"])
+        @self.bot.message_handler(commands=["join"])
         def join_handler(message: types.Message):
             JoinCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["manage"])
+        @self.bot.message_handler(commands=["manage"])
         def manage_handler(message: types.Message):
             ManageCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["create"])
+        @self.bot.message_handler(commands=["create"])
         def create_handler(message: types.Message):
             CreateCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["name"])
+        @self.bot.message_handler(commands=["name"])
         def name_handler(message: types.Message):
             NameCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["history"])
+        @self.bot.message_handler(commands=["history"])
         def history_handler(message: types.Message):
             HistoryCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(commands=["here"])
+        @self.bot.message_handler(commands=["here"])
         def here_handler(message: types.Message):
             HereCallback(self.bot, self.moroz).process_wrap(message)
 
-        @bot.message_handler(func=lambda message: True)
+        @self.bot.message_handler(func=lambda message: True)
         def echo_handler(message: types.Message):
             EchoCallback(self.bot, self.moroz).process_wrap(message)

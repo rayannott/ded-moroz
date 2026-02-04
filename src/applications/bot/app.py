@@ -13,7 +13,7 @@ class BotApp:
 
         self.bot = telebot.TeleBot(self.api_token)
         self.callbacks_manager = CallbacksManager(self.bot, self.moroz)
-        self.callbacks_manager.register_callbacks(self.bot)
+        self.callbacks_manager.register_callbacks()
 
     def _notify_admin_with(self, message: str):
         if self.moroz.admin_user_id is not None:
